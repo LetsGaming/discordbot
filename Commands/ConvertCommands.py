@@ -5,6 +5,7 @@ class Conversion:
         self.client = OpenExchangeRatesClient('56c4524d0ab745518a4994fde36e9ee1')
 
     async def get_convertion_rate(self, interaction: discord.Interaction, currency_code: str, to_currency_code: str):
+        interaction.response.defer()
         latest = self.client.latest()
         currency_code = currency_code.upper()
         to_currency_code = to_currency_code.upper()
@@ -17,14 +18,15 @@ class Conversion:
                 rounded_Rate = round(conversion_Rate, 5)
             else:
                 rounded_Rate = round(conversion_Rate, 2)
-            await interaction.response.send_message(f"1 {currency_code} ({self.get_currency_name(currency_code=currency_code)}) = {rounded_Rate} {to_currency_code} ({self.get_currency_name(currency_code=to_currency_code)})")
+            await interaction.followup.send(f"1 {currency_code} ({self.get_currency_name(currency_code=currency_code)}) = {rounded_Rate} {to_currency_code} ({self.get_currency_name(currency_code=to_currency_code)})")
         except KeyError:
-            await interaction.response.send_message("Invalid Currency-Code!\nTo get a list of valid codes do: /currencies")
+            await interaction.followup.send("Invalid Currency-Code!\nTo get a list of valid codes do: /currencies")
 
     async def get_currencies(self, interaction: discord.Interaction):
+        interaction.response.defer()
         currencies = self.client.currencies()
         codes = list(currencies.keys())
-        await interaction.response.send_message(f"Here is a list of valid currency-codes:\n{codes}")
+        await interaction.followup.send(f"Here is a list of valid currency-codes:\n{codes}")
 
     def get_currency_name(self, currency_code: str):
         currencies = self.client.currencies()

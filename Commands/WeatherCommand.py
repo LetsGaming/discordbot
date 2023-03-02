@@ -10,6 +10,7 @@ class Weather:
         self.mgr = self.owm.weather_manager()
 
     async def getWeather(self, interaction: discord.Interaction, city: str, country_code: Optional[str]=""):
+        interaction.response.defer()
         observation = self.mgr.weather_at_place(city+","+country_code)
         w = observation.weather 
 
@@ -22,7 +23,7 @@ class Weather:
             "humidity": w.humidity,
             "clouds": w.clouds
         }
-        await interaction.response.send_message("Getting Weather-Data...")
+        await interaction.followup.send("Getting Weather-Data...")
         await interaction.channel.send(embed=self.buildWeatherEmbed(dictionary=weatherDict))
 
     def buildWeatherEmbed(self, dictionary: dict):

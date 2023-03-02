@@ -24,6 +24,7 @@ class Quote:
             return json.load(file)
 
     async def create_quote(self, interaction: discord.Interaction, username: str, text: str):
+        interaction.response.defer()
         cursor = self.connection.cursor()
         
         user = None
@@ -39,15 +40,16 @@ class Quote:
         cursor.execute(operation=sql, params=val)
         self.connection.commit()
 
-        await interaction.response.send_message(f"Quote from {username} is now saved in the database.")
+        await interaction.followup.send(f"Quote from {username} is now saved in the database.")
 
     async def get_quote(self, interaction: discord.Interaction, embed: Optional[bool]=True):
+        interaction.response.defer()
         cursor = self.connection.cursor()
         sql = "SELECT quote_date, username, user_avatar, quote_text FROM quote WHERE guild_id = %s ORDER BY RAND() LIMIT 1"
         cursor.execute(operation=sql, params=(interaction.guild.id,))
         result = cursor.fetchone()
         if not result:
-            return await interaction.response.send_message("No quotes found for this guild.")
+            return await interaction.followup.send("No quotes found for this guild.")
         
         if result != self.lastResult:
             date, username, avatar, text = result
@@ -56,10 +58,10 @@ class Quote:
             self.get_quote(embed=embed)
 
         if embed:
-            await interaction.response.send_message("Grabbing random quote...")
+            await interaction.followup.send("Grabbing random quote...")
             await interaction.channel.send(embed=self.build_quote_embed(date=date, username=username, avatar=avatar, text=text))
         else:
-            await interaction.response.send_message(f"{date} - {username}: {text}")
+            await interaction.followup.send(f"{date} - {username}: {text}")
 
     async def get_user(self, user_id):
         user_id = int(re.search(r'\d+', user_id).group())

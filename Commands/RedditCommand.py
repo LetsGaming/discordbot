@@ -8,8 +8,9 @@ class Reddit:
         self.memeClient = DankMemeClient() #Creates a new Memeclient to get random posts out of a subreddit
 
     async def reddit(self, interaction: discord.Interaction, subreddit: str):
+        interaction.response.defer()
         try:
-            await interaction.response.send_message(f"Searching for a Reddit-post in [r/{subreddit}]...")
+            await interaction.followup.send(f"Searching for a Reddit-post in [r/{subreddit}]...")
             postDict = await self.memeClient.async_meme(subreddit=subreddit)
             selftext = postDict['selftext']
             if "comment" in postDict["post_url"] and selftext != "":

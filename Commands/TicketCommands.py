@@ -34,6 +34,7 @@ class Ticket:
         self.tree.command(name="add_member", description="Adds a member to a team")(self.add_member_to_team)
 
     async def create_ticket(self, interaction: discord.Interaction):
+        interaction.response.defer()
         # Get the available projects from the database
         cursor = self.connection.cursor()
         cursor.execute("SELECT * FROM projects WHERE guild_id = %s", (interaction.guild.id,))
@@ -46,7 +47,7 @@ class Ticket:
         project_options_text = ""
         for option in project_options:
             project_options_text += "**{}** - {}\n".format(option.value, option.name)
-        await interaction.response.send_message(f"Please select a project:\n{project_options_text}")     
+        await interaction.followup.send(f"Please select a project:\n{project_options_text}")     
         try:
             project_choice_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
         except asyncio.TimeoutError:
@@ -126,6 +127,7 @@ class Ticket:
         await interaction.channel.send("Ticket created successfully!")
     
     async def get_ticket(self, interaction: discord.Interaction, get_resolved: Optional[bool]=False):
+        interaction.response.defer()
         cursor = self.connection.cursor()
         cursor.execute("SELECT * FROM projects WHERE guild_id = %s", (interaction.guild.id,))
         projects = cursor.fetchall()
@@ -137,7 +139,7 @@ class Ticket:
         project_options_text = ""
         for option in project_options:
             project_options_text += "**{}** - {}\n".format(option.value, option.name)
-        await interaction.response.send_message(f"For what project do you want to get your tickets?:\n{project_options_text}")     
+        await interaction.followup.send(f"For what project do you want to get your tickets?:\n{project_options_text}")     
         try:
             project_choice_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
         except asyncio.TimeoutError:
@@ -176,6 +178,7 @@ class Ticket:
         await self.send_tickets_embeds(interaction, tickets_dict)
 
     async def resolve_ticket(self, interaction: discord.Interaction, ticket_id: int):
+        interaction.response.defer()
         cursor = self.connection.cursor()
 
         cursor.execute("SELECT member_id FROM tickets WHERE id = %s", (ticket_id,))
@@ -189,9 +192,9 @@ class Ticket:
             resolve_date = date.today().isoformat()
             cursor.execute("UPDATE tickets SET resolved = 1, resolve_date = %s WHERE tickets.id = %s", (resolve_date, ticket_id))
             self.connection.commit()
-            await interaction.response.send_message(f"Your Ticket with ID: {ticket_id} got resolved!")
+            await interaction.followup.send(f"Your Ticket with ID: {ticket_id} got resolved!")
         else:
-            await interaction.response.send_message(f"This Ticket does not belong to you, you can't resolve it!")
+            await interaction.followup.send(f"This Ticket does not belong to you, you can't resolve it!")
             return
          
     async def create_project(self, interaction: discord.Interaction):
@@ -201,7 +204,7 @@ class Ticket:
             return
 
         # Prompt for project name
-        await interaction.response.send_message("What would you like to name your project?")
+        await interaction.followup.send("What would you like to name your project?")
         try:
             project_name_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
         except asyncio.TimeoutError:
@@ -225,7 +228,8 @@ class Ticket:
         team_name = team_name_msg.content
         
         # Create the team and prompt for member addition
-        team_id = self.create_team(interaction=interaction, name=team_name, description="", project_id=project_id) # Change the arguments to match your create_team function
+        team_id = self.create_team(interaction=interaction, name=team_name, description="", project_id=project_id)
+        interaction.response.defer()
         while True:
             await interaction.followup.send("Would you like to add a member to the team? (y/n)")
             try:
@@ -257,6 +261,7 @@ class Ticket:
         await interaction.channel.send(f"Project '{project_name}' successfully created.")
 
     async def add_team_to_project(self, interaction: discord.Interaction):
+        interaction.response.defer()
         # Check if user is the server owner
         if interaction.user.id != interaction.guild.owner_id:
             await interaction.channel.send("Please contact the server owner if you wish to add a new team to a project!")
@@ -274,7 +279,7 @@ class Ticket:
         project_options_text = ""
         for option in project_options:
             project_options_text += "**{}** - {}\n".format(option.value, option.name)
-        await interaction.response.send_message(f"Please select a project:\n{project_options_text}")     
+        await interaction.followup.send(f"Please select a project:\n{project_options_text}")     
         try:
             project_choice_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
         except asyncio.TimeoutError:
@@ -293,6 +298,7 @@ class Ticket:
         await interaction.channel.send(f"Team {team_name} successfully created!")
     
     async def add_member_to_team(self, interaction: discord.Interaction, discord_id: str, team_name: str):
+        interaction.response.defer()
         # Check if user is the server owner
         if interaction.user.id != interaction.guild.owner_id:
             await interaction.channel.send("Please contact the server owner if you wish to create a new project!")
@@ -309,7 +315,7 @@ class Ticket:
         project_options_text = ""
         for option in project_options:
             project_options_text += "**{}** - {}\n".format(option.value, option.name)
-        await interaction.response.send_message(f"Please select a project:\n{project_options_text}")     
+        await interaction.followup.send(f"Please select a project:\n{project_options_text}")     
         try:
             project_choice_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
         except asyncio.TimeoutError:
