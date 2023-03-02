@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Erstellungszeit: 28. Feb 2023 um 17:00
+-- Erstellungszeit: 02. Mrz 2023 um 01:31
 -- Server-Version: 10.4.27-MariaDB
 -- PHP-Version: 8.1.12
 
@@ -103,7 +103,7 @@ CREATE TABLE `quote` (
 --
 
 INSERT INTO `quote` (`quote_id`, `guild_id`, `quote_date`, `username`, `user_avatar`, `quote_text`) VALUES
-(2, 1043909951191535656, '2023-01-31', '『米蘭』', 'https://cdn.discordapp.com/avatars/332527004606005248/abe0059e5826e7a4fb0380bef04354dc.png?size=1024', 'i dont have a job i already work as a discord mod'),
+(2, 1043909951191535656, '2023-01-31', '『米蘭』', 'https://cdn.discordapp.com/avatars/332527004606005248/abe0059e5826e7a4fb0380bef04354dc.png?size=1024', 'i don\'t have a job i already work as a discord mod'),
 (3, 1043909951191535656, '2023-02-01', 'LetsGamingDE', 'https://cdn.discordapp.com/avatars/272402865874534400/4de66dd5df030ce9f31008675a6ee6c0.png?size=1024', 'Kämpft gegen Malphite: Warum macht dieser Stein denn so viel Damage? So hab ich Kleinstein nicht in Erinnerung ;-;'),
 (4, 1043909951191535656, '2023-02-01', '『米蘭』', 'https://cdn.discordapp.com/avatars/332527004606005248/abe0059e5826e7a4fb0380bef04354dc.png?size=1024', 'Ich wie ich in Mathe einfach nichts verstehe: https://cdn.discordapp.com/attachments/1026274535936376923/1070334973619486851/image.png'),
 (5, 1043909951191535656, '2023-02-01', 'LetsGamingDE', 'https://cdn.discordapp.com/avatars/272402865874534400/4de66dd5df030ce9f31008675a6ee6c0.png?size=1024', 'Domenic : Das ist ein Semilocon. / Mill : ...Meinst du Semicolon? / Domenic : Ja Semilocolon.'),
@@ -150,15 +150,17 @@ CREATE TABLE `tickets` (
   `member_id` int(11) NOT NULL,
   `ticket_title` varchar(50) NOT NULL,
   `ticket_description` varchar(255) NOT NULL,
-  `deadline` date NOT NULL
+  `deadline` date NOT NULL,
+  `resolved` tinyint(4) NOT NULL,
+  `resolve_date` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Daten für Tabelle `tickets`
 --
 
-INSERT INTO `tickets` (`id`, `guild_id`, `project_id`, `team_id`, `member_id`, `ticket_title`, `ticket_description`, `deadline`) VALUES
-(1, 1075667809100628028, 1, 2, 4, 'BeispielTicket', 'Dies ist nur ein Beispiel', '2023-02-28');
+INSERT INTO `tickets` (`id`, `guild_id`, `project_id`, `team_id`, `member_id`, `ticket_title`, `ticket_description`, `deadline`, `resolved`, `resolve_date`) VALUES
+(1, 1075667809100628028, 1, 2, 4, 'BeispielTicket', 'Dies ist nur ein Beispiel', '2023-02-28', 1, '2023-02-28');
 
 --
 -- Indizes der exportierten Tabellen
