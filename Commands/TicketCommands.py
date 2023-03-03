@@ -158,9 +158,9 @@ class Ticket:
         ticket_deadline_date = date_obj.strftime('%Y-%m.%d')
         
         # Create the ticket in the database
-        ticket_author = await self.get_user(user_id=interaction.user.id)
+        ticket_author = interaction.user
         cursor.execute("INSERT INTO tickets (id, guild_id, project_id, team_id, member_id, ticket_author, ticket_author_icon, ticket_title, ticket_description, deadline, resolved, resolve_date) VALUES (null,%s, %s, %s, %s, %s, %s, %s, %s, %s, 0, null)",
-                         (interaction.guild.id, project_id, team_id, member_id, ticket_author.name, ticket_author._avatar, ticket_title, ticket_description, ticket_deadline_date))
+                         (interaction.guild.id, project_id, team_id, member_id, ticket_author.nick, ticket_author.avatar.url, ticket_title, ticket_description, ticket_deadline_date))
         self.connection.commit()
         print(message_amount)
         await self.delete_command_messages(interaction = interaction, amount=message_amount)
