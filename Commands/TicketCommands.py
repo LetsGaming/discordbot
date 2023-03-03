@@ -34,6 +34,7 @@ class Ticket:
         self.tree.command(name="add_member", description="Adds a member to a team")(self.add_member_to_team)
 
     async def create_ticket(self, interaction: discord.Interaction):
+        message_amount = 0
         await interaction.response.defer()
         # Get the available projects from the database
         cursor = self.connection.cursor()
@@ -47,16 +48,21 @@ class Ticket:
         project_options_text = ""
         for option in project_options:
             project_options_text += "**{}** - {}\n".format(option.value, option.name)
-        await interaction.followup.send(f"Please select a project:\n{project_options_text}")     
+        await interaction.followup.send(f"Please select a project:\n{project_options_text}")
+        message_amount += 1     
         try:
             project_choice_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
+            message_amount += 1
         except asyncio.TimeoutError:
             await interaction.followup.send("Ticket creation timed out.")
+            message_amount += 1
             return
         project_id = project_choice_msg.content
+        
         valid_project_ids = [option.value for option in project_options]
         if project_id not in valid_project_ids:
             await interaction.followup.send("Invalid Project-ID. Please try again")
+            message_amount += 1
             return
 
         # Get the available teams from the database
@@ -70,17 +76,23 @@ class Ticket:
         team_options_text = ""
         for option in  team_options:
             team_options_text += "**{}** - {}\n".format(option.value, option.name)
-        await interaction.channel.send(f"Please select a team:\n{team_options_text}")     
+        await interaction.channel.send(f"Please select a team:\n{team_options_text}")
+        message_amount += 1     
         try:
             team_choice_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
+            message_amount += 1
         except asyncio.TimeoutError:
             await interaction.followup.send("Ticket creation timed out.")
+            message_amount += 1
             return
         team_id = team_choice_msg.content
+        
         valid_team_ids = [option.value for option in team_options]
         if team_id not in valid_team_ids:
             await interaction.followup.send("Invalid Tean-ID. Please try again")
+            message_amount += 1
             return
+        
         # Get the available members from the database
         cursor.execute("SELECT * FROM members WHERE team_id = %s", (team_id,))
         members = cursor.fetchall()
@@ -93,51 +105,69 @@ class Ticket:
         member_options_text = ""
         for option in member_options:
             member_options_text += "**{}** - {}\n".format(option.value, option.name)
-        await interaction.channel.send(f"Please select a a member:\n{member_options_text}")     
+        await interaction.channel.send(f"Please select a a member:\n{member_options_text}")    
+        message_amount += 1 
         try:
             member_choice_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
+            message_amount += 1
         except asyncio.TimeoutError:
             await interaction.followup.send("Ticket creation timed out.")
+            message_amount += 1
             return
         member_id = member_choice_msg.content
+        
         valid_member_ids = [option.value for option in member_options]
         if member_id not in valid_member_ids:
             await interaction.followup.send("Invalid Member-ID. Please try again")
+            message_amount += 1
             return
         
         await interaction.followup.send("What would you like the title of the ticket to be?")
+        message_amount += 1
         try:
             ticket_title_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
+            message_amount += 1
         except asyncio.TimeoutError:
             await interaction.followup.send("Ticket creation timed out.")
+            message_amount += 1
             return
         ticket_title = ticket_title_msg.content
 
         await interaction.followup.send("What would you like the reason/description for the ticket to be?")
+        message_amount += 1
         try:
             ticket_description_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
+            message_amount += 1
         except asyncio.TimeoutError:
             await interaction.followup.send("Ticket creation timed out.")
+            message_amount += 1
             return
         ticket_description = ticket_description_msg.content
 
         await interaction.followup.send("What is the deadline for the ticket? ")
+        message_amount += 1
         try:
             ticket_deadline_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
+            message_amount += 1
         except asyncio.TimeoutError:
             await interaction.followup.send("Ticket creation timed out.")
+            message_amount += 1
             return
         ticket_deadline = ticket_deadline_msg.content
         date_obj = datetime.strptime(ticket_deadline, '%d.%m.%Y')
         ticket_deadline_date = date_obj.strftime('%Y-%m.%d')
+        
         # Create the ticket in the database
-        cursor.execute("INSERT INTO tickets (id, guild_id, project_id, team_id, member_id, ticket_title, ticket_description, deadline, resolved, resolve_date) VALUES (null, %s, %s, %s, %s, %s, %s, %s, 0, null)",
-                         (interaction.guild.id, project_id, team_id, member_id, ticket_title, ticket_description, ticket_deadline_date))
+        ticket_author = await self.get_user(user_id=interaction.user.id)
+        cursor.execute("INSERT INTO tickets (id, guild_id, project_id, team_id, member_id, ticket_author, ticket_title, ticket_description, deadline, resolved, resolve_date) VALUES (null, %s, %s, %s, %s, %s, %s, %s, %s, 0, null)",
+                         (interaction.guild.id, project_id, team_id, member_id, ticket_author, ticket_title, ticket_description, ticket_deadline_date))
         self.connection.commit()
-
+        print(message_amount)
+        await self.delete_command_messages(interaction = interaction, amount=message_amount)
         await interaction.channel.send("Ticket created successfully!")
-    
+           
     async def get_ticket(self, interaction: discord.Interaction, get_resolved: Optional[bool]=False):
+        message_amount = 0
         await interaction.response.defer()
         cursor = self.connection.cursor()
         cursor.execute("SELECT * FROM projects WHERE guild_id = %s", (interaction.guild.id,))
@@ -150,16 +180,20 @@ class Ticket:
         project_options_text = ""
         for option in project_options:
             project_options_text += "**{}** - {}\n".format(option.value, option.name)
-        await interaction.followup.send(f"For what project do you want to get your tickets?:\n{project_options_text}")     
+        await interaction.followup.send(f"For what project do you want to get your tickets?:\n{project_options_text}")    
+        message_amount += 1 
         try:
             project_choice_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
+            message_amount += 1
         except asyncio.TimeoutError:
             await interaction.followup.send("Ticket getting timed out.")
+            message_amount += 1
             return
         project_id = project_choice_msg.content
         valid_project_ids = [option.value for option in project_options]
         if project_id not in valid_project_ids:
             await interaction.followup.send("Invalid Project-ID. Please try again")
+            message_amount += 1
             return
         
         discord_id = f"<@{interaction.user.id}>"
@@ -176,22 +210,23 @@ class Ticket:
         tickets_dict = {}
         for index, ticket in enumerate(tickets):
             ticket_id = ticket[0]
-            ticket_title = ticket[5]
-            ticket_description = ticket[6]
-            ticket_deadline = ticket[7]
-            ticket_resolved = ticket[8]
-            ticket_resolved_date = ticket[9]
+            ticket_author = ticket[5]
+            ticket_title = ticket[6]
+            ticket_description = ticket[7]
+            ticket_deadline = ticket[8]
+            ticket_resolved = ticket[9]
+            ticket_resolved_date = ticket[10]
             tickets_dict[index] = {
                 "ticket_id": ticket_id,
+                "ticket_author": ticket_author,
                 "ticket_title": ticket_title,
                 "ticket_description": ticket_description,
                 "ticket_deadline": ticket_deadline,
                 "ticket_resolved": ticket_resolved,
                 "ticket_resolved_date": ticket_resolved_date
             }
-
-        await self.send_tickets_embeds(interaction, tickets_dict)
-
+        await self.send_tickets_embeds(interaction, tickets_dict, message_amount)
+        
     async def resolve_ticket(self, interaction: discord.Interaction, ticket_id: int):
         await interaction.response.defer()
         cursor = self.connection.cursor()
@@ -365,13 +400,15 @@ class Ticket:
 
         await interaction.channel.send(f"Added member '{discord_id}' to team '{team_name}' in project '{project_id}'.")
 
-    async def send_tickets_embeds(self, interaction:discord.Interaction, tickets_dict):
+    async def send_tickets_embeds(self, interaction:discord.Interaction, tickets_dict: dict, amount: int):
+            await self.delete_command_messages(interaction=interaction, amount=amount)
             if len(tickets_dict) < 1:
                 await interaction.channel.send("You do not have any (open) Tickets!")
             else:
                 for ticket_index in tickets_dict:
                     ticket = tickets_dict[ticket_index]
                     embed = discord.Embed(title=ticket["ticket_title"], description=ticket["ticket_description"])
+                    embed.set_author(name=f"From: {ticket['ticket_author']}")
                     embed.add_field(name="ID", value=ticket["ticket_id"])
                     embed.add_field(name="Deadline", value=ticket["ticket_deadline"].strftime('%d.%m.%Y'))
                     if ticket["ticket_resolved"]:
@@ -411,3 +448,6 @@ class Ticket:
     async def get_user(self, user_id):
         user_id = int(re.search(r'\d+', user_id).group())
         return await self.client.fetch_user(user_id)
+    
+    async def delete_command_messages(self, interaction: discord.Interaction, amount: int):
+        await interaction.channel.purge(limit=amount, bulk=True)
