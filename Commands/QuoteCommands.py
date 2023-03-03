@@ -24,7 +24,7 @@ class Quote:
             return json.load(file)
 
     async def create_quote(self, interaction: discord.Interaction, username: str, text: str):
-        interaction.response.defer()
+        await interaction.response.defer()
         cursor = self.connection.cursor()
         
         user = None
@@ -43,7 +43,7 @@ class Quote:
         await interaction.followup.send(f"Quote from {username} is now saved in the database.")
 
     async def get_quote(self, interaction: discord.Interaction, embed: Optional[bool]=True):
-        interaction.response.defer()
+        await interaction.response.defer()
         cursor = self.connection.cursor()
         sql = "SELECT quote_date, username, user_avatar, quote_text FROM quote WHERE guild_id = %s ORDER BY RAND() LIMIT 1"
         cursor.execute(operation=sql, params=(interaction.guild.id,))

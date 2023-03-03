@@ -10,7 +10,7 @@ class Weather:
         self.mgr = self.owm.weather_manager()
 
     async def getWeather(self, interaction: discord.Interaction, city: str, country_code: Optional[str]=""):
-        interaction.response.defer()
+        await interaction.response.defer()
         observation = self.mgr.weather_at_place(city+","+country_code)
         w = observation.weather 
 

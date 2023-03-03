@@ -12,7 +12,7 @@ class WebsiteUtils:
         openai.api_key = "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"        
 
     async def get_business_info(self, interaction: discord.Interaction, business_name: str, summarize: Optional[bool]=True, language: Optional[str]="English"):
-        interaction.response.defer()
+        await interaction.response.defer()
         await interaction.followup.send("Getting business information...")
         information = self.scrape_about_us(business_name=business_name)
         if not summarize:

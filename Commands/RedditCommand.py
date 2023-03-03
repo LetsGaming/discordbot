@@ -8,7 +8,7 @@ class Reddit:
         self.memeClient = DankMemeClient() #Creates a new Memeclient to get random posts out of a subreddit
 
     async def reddit(self, interaction: discord.Interaction, subreddit: str):
-        interaction.response.defer()
+        await interaction.response.defer()
         try:
             await interaction.followup.send(f"Searching for a Reddit-post in [r/{subreddit}]...")
             postDict = await self.memeClient.async_meme(subreddit=subreddit)
@@ -33,12 +33,12 @@ class Reddit:
         embed.set_footer(text=f"{dictionary['upvotes']} 👍 | {dictionary['comments']} 💬")
         return embed
     
-    def buildContentEmbed(self, data):
+    def buildContentEmbed(self, dictionary: dict):
         embed = discord.Embed(
-            title=data["title"],
-            url=data["post_url"],
-            description=f"{data['author']} \nCan't see the image? [Click Here.]({data['img_url']})",
+            title=dictionary["title"],
+            url=dictionary["post_url"],
+            description=f"{dictionary['author']} \nCan't see the image? [Click Here.]({dictionary['img_url']})",
         )
-        embed.set_image(url=data["img_url"])
-        embed.set_footer(text=f"{data['upvotes']} 👍 | {data['comments']} 💬")
+        embed.set_image(url=dictionary["img_url"])
+        embed.set_footer(text=f"{dictionary['upvotes']} 👍 | {dictionary['comments']} 💬")
         return embed

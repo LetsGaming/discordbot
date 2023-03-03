@@ -6,7 +6,7 @@ import discord
 class Moderation:
 
     async def clear_messages(self, interaction: discord.Interaction, amount: int):
-        interaction.response.defer()
+        await interaction.response.defer()
         try:
             await interaction.followup.send(f"Deleting {amount} messages.")
             await asyncio.sleep(1) 

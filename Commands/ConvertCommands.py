@@ -5,7 +5,7 @@ class Conversion:
         self.client = OpenExchangeRatesClient('56c4524d0ab745518a4994fde36e9ee1')
 
     async def get_convertion_rate(self, interaction: discord.Interaction, currency_code: str, to_currency_code: str):
-        interaction.response.defer()
+        await interaction.response.defer()
         latest = self.client.latest()
         currency_code = currency_code.upper()
         to_currency_code = to_currency_code.upper()

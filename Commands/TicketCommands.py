@@ -34,7 +34,7 @@ class Ticket:
         self.tree.command(name="add_member", description="Adds a member to a team")(self.add_member_to_team)
 
     async def create_ticket(self, interaction: discord.Interaction):
-        interaction.response.defer()
+        await interaction.response.defer()
         # Get the available projects from the database
         cursor = self.connection.cursor()
         cursor.execute("SELECT * FROM projects WHERE guild_id = %s", (interaction.guild.id,))
@@ -127,7 +127,7 @@ class Ticket:
         await interaction.channel.send("Ticket created successfully!")
     
     async def get_ticket(self, interaction: discord.Interaction, get_resolved: Optional[bool]=False):
-        interaction.response.defer()
+        await interaction.response.defer()
         cursor = self.connection.cursor()
         cursor.execute("SELECT * FROM projects WHERE guild_id = %s", (interaction.guild.id,))
         projects = cursor.fetchall()
@@ -178,7 +178,7 @@ class Ticket:
         await self.send_tickets_embeds(interaction, tickets_dict)
 
     async def resolve_ticket(self, interaction: discord.Interaction, ticket_id: int):
-        interaction.response.defer()
+        await interaction.response.defer()
         cursor = self.connection.cursor()
 
         cursor.execute("SELECT member_id FROM tickets WHERE id = %s", (ticket_id,))
@@ -198,6 +198,7 @@ class Ticket:
             return
          
     async def create_project(self, interaction: discord.Interaction):
+        await interaction.response.defer()
         # Check if user is the server owner
         if interaction.user.id != interaction.guild.owner_id:
             await interaction.channel.send("Please contact the server owner if you wish to create a new project!")
@@ -261,7 +262,7 @@ class Ticket:
         await interaction.channel.send(f"Project '{project_name}' successfully created.")
 
     async def add_team_to_project(self, interaction: discord.Interaction):
-        interaction.response.defer()
+        await interaction.response.defer()
         # Check if user is the server owner
         if interaction.user.id != interaction.guild.owner_id:
             await interaction.channel.send("Please contact the server owner if you wish to add a new team to a project!")
@@ -298,7 +299,7 @@ class Ticket:
         await interaction.channel.send(f"Team {team_name} successfully created!")
     
     async def add_member_to_team(self, interaction: discord.Interaction, discord_id: str, team_name: str):
-        interaction.response.defer()
+        await interaction.response.defer()
         # Check if user is the server owner
         if interaction.user.id != interaction.guild.owner_id:
             await interaction.channel.send("Please contact the server owner if you wish to create a new project!")
