@@ -159,8 +159,8 @@ class Ticket:
         
         # Create the ticket in the database
         ticket_author = await self.get_user(user_id=interaction.user.id)
-        cursor.execute("INSERT INTO tickets (id, guild_id, project_id, team_id, member_id, ticket_author, ticket_title, ticket_description, deadline, resolved, resolve_date) VALUES (null, %s, %s, %s, %s, %s, %s, %s, %s, 0, null)",
-                         (interaction.guild.id, project_id, team_id, member_id, ticket_author, ticket_title, ticket_description, ticket_deadline_date))
+        cursor.execute("INSERT INTO tickets (id, guild_id, project_id, team_id, member_id, ticket_author, ticket_author_icon, ticket_title, ticket_description, deadline, resolved, resolve_date) VALUES (null,%s, %s, %s, %s, %s, %s, %s, %s, %s, 0, null)",
+                         (interaction.guild.id, project_id, team_id, member_id, ticket_author.name, ticket_author._avatar, ticket_title, ticket_description, ticket_deadline_date))
         self.connection.commit()
         print(message_amount)
         await self.delete_command_messages(interaction = interaction, amount=message_amount)
@@ -209,16 +209,17 @@ class Ticket:
         tickets = cursor.fetchall()
         tickets_dict = {}
         for index, ticket in enumerate(tickets):
-            print(ticket)
             ticket_id = ticket[0]
             ticket_author = ticket[5]
-            ticket_title = ticket[6]
-            ticket_description = ticket[7]
-            ticket_deadline = ticket[8]
-            ticket_resolved = ticket[9]
-            ticket_resolved_date = ticket[10]
+            author_icon = ticket[6]
+            ticket_title = ticket[7]
+            ticket_description = ticket[8]
+            ticket_deadline = ticket[9]
+            ticket_resolved = ticket[10]
+            ticket_resolved_date = ticket[11]
             tickets_dict[index] = {
                 "ticket_id": ticket_id,
+                "author_icon": author_icon,
                 "ticket_author": ticket_author,
                 "ticket_title": ticket_title,
                 "ticket_description": ticket_description,
@@ -409,7 +410,7 @@ class Ticket:
                 for ticket_index in tickets_dict:
                     ticket = tickets_dict[ticket_index]
                     embed = discord.Embed(title=ticket["ticket_title"], description=ticket["ticket_description"])
-                    embed.set_author(name=f"From: {ticket['ticket_author']}")
+                    embed.set_author(name=f"From: {ticket['ticket_author']}", icon_url=ticket["author_icon"])
                     embed.add_field(name="ID", value=ticket["ticket_id"])
                     embed.add_field(name="Deadline", value=ticket["ticket_deadline"].strftime('%d.%m.%Y'))
                     if ticket["ticket_resolved"]:
