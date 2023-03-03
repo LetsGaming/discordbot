@@ -54,6 +54,10 @@ class Ticket:
             await interaction.followup.send("Ticket creation timed out.")
             return
         project_id = project_choice_msg.content
+        valid_project_ids = [option.value for option in project_options]
+        if project_id not in valid_project_ids:
+            await interaction.followup.send("Invalid Project-ID. Please try again")
+            return
 
         # Get the available teams from the database
         cursor.execute("SELECT * FROM teams WHERE project_id = %s", (project_id,))
@@ -73,7 +77,10 @@ class Ticket:
             await interaction.followup.send("Ticket creation timed out.")
             return
         team_id = team_choice_msg.content
-
+        valid_team_ids = [option.value for option in team_options]
+        if team_id not in valid_team_ids:
+            await interaction.followup.send("Invalid Tean-ID. Please try again")
+            return
         # Get the available members from the database
         cursor.execute("SELECT * FROM members WHERE team_id = %s", (team_id,))
         members = cursor.fetchall()
@@ -93,7 +100,11 @@ class Ticket:
             await interaction.followup.send("Ticket creation timed out.")
             return
         member_id = member_choice_msg.content
-
+        valid_member_ids = [option.value for option in member_options]
+        if member_id not in valid_member_ids:
+            await interaction.followup.send("Invalid Member-ID. Please try again")
+            return
+        
         await interaction.followup.send("What would you like the title of the ticket to be?")
         try:
             ticket_title_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
@@ -146,7 +157,11 @@ class Ticket:
             await interaction.followup.send("Ticket getting timed out.")
             return
         project_id = project_choice_msg.content
-
+        valid_project_ids = [option.value for option in project_options]
+        if project_id not in valid_project_ids:
+            await interaction.followup.send("Invalid Project-ID. Please try again")
+            return
+        
         discord_id = f"<@{interaction.user.id}>"
         cursor.execute("SELECT id, team_id FROM members WHERE discord_id = %s AND project_id = %s", (discord_id, project_id))
         member_tuple = cursor.fetchone()
@@ -287,7 +302,11 @@ class Ticket:
             await interaction.followup.send("Ticket creation timed out.")
             return
         project_id = project_choice_msg.content
-
+        valid_project_ids = [option.value for option in project_options]
+        if project_id not in valid_project_ids:
+            await interaction.followup.send("Invalid Project-ID. Please try again")
+            return
+        
         await interaction.followup.send(f"What do you want to name the team?")     
         try:
             team_name_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
@@ -323,7 +342,11 @@ class Ticket:
             await interaction.followup.send("Member addition timed out.")
             return
         project_id = project_choice_msg.content
-
+        valid_project_ids = [option.value for option in project_options]
+        if project_id not in valid_project_ids:
+            await interaction.followup.send("Invalid Project-ID. Please try again")
+            return
+        
         # Extract the member's name and ID from the tag
         if not discord_id.startswith("<"):
             await interaction.channel.send(f"'{discord_id}' is not a valid form. Please use @username!")
