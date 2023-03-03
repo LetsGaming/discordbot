@@ -209,13 +209,13 @@ class Ticket:
         tickets = cursor.fetchall()
         tickets_dict = {}
         for index, ticket in enumerate(tickets):
-            ticket_id = ticket[0]
-            ticket_author = ticket[5]
-            ticket_title = ticket[6]
-            ticket_description = ticket[7]
-            ticket_deadline = ticket[8]
-            ticket_resolved = ticket[9]
-            ticket_resolved_date = ticket[10]
+            ticket_id = ticket["ticket_id"]
+            ticket_author = ticket["ticket_author"]
+            ticket_title = ticket["ticket_title"]
+            ticket_description = ticket["ticket_description"]
+            ticket_deadline = ticket["deadline"]
+            ticket_resolved = ticket["resolved"]
+            ticket_resolved_date = ticket["resolve_date"]
             tickets_dict[index] = {
                 "ticket_id": ticket_id,
                 "ticket_author": ticket_author,
