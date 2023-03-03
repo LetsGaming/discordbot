@@ -410,7 +410,8 @@ class Ticket:
                 for ticket_index in tickets_dict:
                     ticket = tickets_dict[ticket_index]
                     embed = discord.Embed(title=ticket["ticket_title"], description=ticket["ticket_description"])
-                    embed.set_author(name=f"From: {ticket['ticket_author']}", icon_url=ticket["author_icon"])
+                    embed.set_author(name=f"From: {ticket['ticket_author']}")
+                    embed.set_thumbnail(url=ticket["author_icon"])
                     embed.add_field(name="ID", value=ticket["ticket_id"])
                     embed.add_field(name="Deadline", value=ticket["ticket_deadline"].strftime('%d.%m.%Y'))
                     if ticket["ticket_resolved"]:
