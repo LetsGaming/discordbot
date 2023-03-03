@@ -99,7 +99,7 @@ class Ticket:
         member_options = []
         for member in members:
             user = await self.get_user(member[2])
-            member_options.append(app_commands.Choice(name=user.name, value=str(member[0])))
+            member_options.append(app_commands.Choice(name=user.display_name, value=str(member[0])))
 
         # Ask for the member
         member_options_text = ""
