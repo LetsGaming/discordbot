@@ -19,7 +19,7 @@ class Commands():
         self.quoteCommands = Quote(client=client)
         self.websiteCommand = WebsiteUtils()
         self.conversionCommand = Conversion()
-        self.ticket = Ticket(tree=self.tree, client=client)
+        self.ticket = Ticket(tree=self.tree)
         self.synced = False #Sets the synced bool to false
         
     async def register_commands(self):
