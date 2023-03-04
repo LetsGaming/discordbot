@@ -20,7 +20,13 @@ class BotClient(discord.Client):
     async def on_ready(self):
         self.command_handler = CommandHandler.Commands(self)
         await self.command_handler.register_commands()
-
+    
+    async def on_guild_join(guild: discord.Guild):
+        # Create channels
+        category = await guild.create_category("Tickets")
+        await category.create_text_channel("create-ticket")
+        await category.create_text_channel("get-ticket")
+    
     async def on_member_join(member: discord.Member):
         role = discord.utils.get(member.guild.roles, name = "Member")
         await member.add_roles(role)

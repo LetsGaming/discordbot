@@ -36,6 +36,11 @@ class Ticket:
     async def create_ticket(self, interaction: discord.Interaction):
         message_amount = 0
         await interaction.response.defer()
+        
+        channel = await self.create_sub_channel(interaction=interaction)
+        channel.send(f"Welcome {interaction.user.mention}! This is your ticket channel.")
+        await interaction.response.edit_message(channel_id=channel.id)
+        
         # Get the available projects from the database
         cursor = self.connection.cursor()
         cursor.execute("SELECT * FROM projects WHERE guild_id = %s", (interaction.guild.id,))
@@ -178,6 +183,11 @@ class Ticket:
     async def get_ticket(self, interaction: discord.Interaction, get_all: Optional[bool]=False, get_resolved: Optional[bool]=False):
         message_amount = 0
         await interaction.response.defer()
+        
+        channel = await self.create_sub_channel(interaction=interaction)
+        channel.send(f"Welcome {interaction.user.mention}! This is your ticket channel.")
+        await interaction.response.edit_message(channel_id=channel.id)
+        
         cursor = self.connection.cursor()
         cursor.execute("SELECT * FROM projects WHERE guild_id = %s", (interaction.guild.id,))
         projects = cursor.fetchall()
@@ -467,3 +477,8 @@ class Ticket:
     async def delete_command_messages(self, interaction: discord.Interaction, amount: int):
         await asyncio.sleep(2)
         await interaction.channel.purge(limit=amount, bulk=True)
+        
+    async def create_sub_channel(self, interaction: discord.Interaction):
+        category = interaction.channel.category
+        channel_name = f"{interaction.channel.name}-{interaction.user.nick}"
+        return await category.create_text_channel(channel_name)
