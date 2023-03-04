@@ -480,8 +480,14 @@ class Ticket:
             channel_name = f"Ticket_Creation-{interaction.user.nick}"
         else:
             channel_name = "Unknown"
-        channel= await category.create_text_channel(channel_name)
-        channel.set_permissions(target=interaction.user)
+        member_role = discord.utils.get(interaction.guild.roles, name = "Member")
+        overwrites = {
+            interaction.guild.default_role: discord.PermissionOverwrite(read_messages=False),
+            member_role: discord.PermissionOverwrite(read_messages=False),
+            interaction.user: discord.PermissionOverwrite(read_messages=True),
+        }
+        channel = await category.create_text_channel(channel_name)
+        await channel.set_permissions(overwrite=overwrites)
         return channel
     
     async def delete_sub_channel(self, channel: discord.TextChannel):
