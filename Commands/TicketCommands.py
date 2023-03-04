@@ -35,10 +35,9 @@ class Ticket:
 
     async def create_ticket(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        
         channel = await self.create_sub_channel(interaction=interaction)
         await interaction.followup.send(f"Your interaction continues in <#{channel.id}>", ephemeral=True)
-        await self.delete_command_messages(amount=2)
+        await self.delete_command_messages(channel=interaction.channel,amount=2)
         await channel.send(f"Welcome {interaction.user.mention}! This is your ticket channel.")
         
         guild = interaction.guild
@@ -158,7 +157,7 @@ class Ticket:
         
         channel = await self.create_sub_channel(interaction=interaction)
         await interaction.followup.send(f"Your interaction continues in <#{channel.id}>", ephemeral=True)
-        await self.delete_command_messages(amount=2)
+        await self.delete_command_messages(channel=interaction.channel,amount=2)
         await channel.send(f"Welcome {interaction.user.mention}! This is your ticket channel.")
         
         guild = interaction.guild
