@@ -44,7 +44,7 @@ class Ticket:
         interaction_user = interaction.user
         
         timeout = 120
-        task = asyncio.create_task(self.delete_channel_on_timeout(channel, timeout))
+        task = asyncio.create_task(self.delete_channel_on_timeout(channel, timeout, task=task))
         
         # Get the available projects from the database
         cursor = self.connection.cursor()
@@ -168,7 +168,7 @@ class Ticket:
         interaction_user = interaction.user
         
         timeout = 120
-        task = asyncio.create_task(self.delete_channel_on_timeout(channel, timeout))
+        task = asyncio.create_task(self.delete_channel_on_timeout(channel, timeout, task=task))
         
         cursor = self.connection.cursor()
         cursor.execute("SELECT * FROM projects WHERE guild_id = %s", (guild.id,))
@@ -494,11 +494,10 @@ class Ticket:
         await asyncio.sleep(2)
         await channel.delete()
     
-    async def delete_channel_on_timeout(self, channel: discord.TextChannel, timeout):
+    async def delete_channel_on_timeout(self, channel: discord.TextChannel, timeout: int, task: asyncio.Task):
         try:
             await asyncio.wait_for(asyncio.sleep(timeout), timeout=timeout)
         except asyncio.TimeoutError:
-            await channel.delete()
-            print(f"Channel {channel.name} has been deleted due to inactivity.")
-        except asyncio.CancelledError:
-            print(f"Task to delete channel {channel.name} has been cancelled.")
+            if not task.cancelled():
+                await channel.delete()
+                print(f"Channel {channel.name} has been deleted due to inactivity.")
