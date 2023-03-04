@@ -102,8 +102,9 @@ class Ticket:
         members = cursor.fetchall()
         member_options = []
         for member in members:
-            member = await self.get_member(interaction=interaction, userId=member[2])
-            member_options.append(app_commands.Choice(name=member.nick, value=str(member[0])))
+            discord_member = await self.get_member(interaction=interaction, userId=member[2])
+            nick = discord_member.nick if discord_member.nick is not None else discord_member.name
+            member_options.append(app_commands.Choice(name=nick, value=str(member[0])))
 
         # Ask for the member
         member_options_text = ""
@@ -111,7 +112,6 @@ class Ticket:
             member_options_text += "**{}** - {}\n".format(option.value, option.name)
         await interaction.channel.send(f"Please select a a member:\n{member_options_text}")    
         message_amount += 1
-        await self.delete_command_messages(interaction = interaction, amount=message_amount)
         try:
             member_choice_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
             message_amount += 1
