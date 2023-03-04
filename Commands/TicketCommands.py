@@ -482,6 +482,7 @@ class Ticket:
             channel_name = "Unknown"
         channel= await category.create_text_channel(channel_name)
         channel.set_permissions(target=interaction.user)
+        return channel
     
     async def delete_sub_channel(self, channel: discord.TextChannel):
         await asyncio.sleep(2)
