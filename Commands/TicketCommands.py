@@ -500,3 +500,5 @@ class Ticket:
         except asyncio.TimeoutError:
             await channel.delete()
             print(f"Channel {channel.name} has been deleted due to inactivity.")
+        except asyncio.CancelledError:
+            print(f"Task to delete channel {channel.name} has been cancelled.")
