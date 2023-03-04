@@ -37,14 +37,14 @@ class Ticket:
         await interaction.response.defer()
         channel = await self.create_sub_channel(interaction=interaction)
         await interaction.followup.send(f"Your interaction continues in <#{channel.id}>", ephemeral=True)
-        await self.delete_command_messages(channel=interaction.channel,amount=2)
         await channel.send(f"Welcome {interaction.user.mention}! This is your ticket channel.")
+        await self.delete_command_messages(channel=interaction.channel,amount=2)
         
         guild = interaction.guild
         interaction_user = interaction.user
         
         timeout = 120
-        asyncio.create_task(self.delete_channel_on_timeout(channel, timeout))
+        task = asyncio.create_task(self.delete_channel_on_timeout(channel, timeout))
         
         # Get the available projects from the database
         cursor = self.connection.cursor()
@@ -154,20 +154,21 @@ class Ticket:
         self.connection.commit()
         await channel.send("Ticket created successfully!")
         await self.delete_sub_channel(channel=channel)
+        task.cancel()
            
     async def get_ticket(self, interaction: discord.Interaction, get_all: Optional[bool]=False, get_resolved: Optional[bool]=False):
         await interaction.response.defer()
         
         channel = await self.create_sub_channel(interaction=interaction)
         await interaction.followup.send(f"Your interaction continues in <#{channel.id}>", ephemeral=True)
-        await self.delete_command_messages(channel=interaction.channel,amount=2)
         await channel.send(f"Welcome {interaction.user.mention}! This is your ticket channel.")
+        await self.delete_command_messages(channel=interaction.channel,amount=2)
         
         guild = interaction.guild
         interaction_user = interaction.user
         
         timeout = 120
-        asyncio.create_task(self.delete_channel_on_timeout(channel, timeout))
+        task = asyncio.create_task(self.delete_channel_on_timeout(channel, timeout))
         
         cursor = self.connection.cursor()
         cursor.execute("SELECT * FROM projects WHERE guild_id = %s", (guild.id,))
@@ -227,6 +228,7 @@ class Ticket:
             }
         await channel.send("Getting your tickets...")
         await self.send_tickets_embeds(channel=channel, interaction_user=interaction_user, tickets_dict=tickets_dict)
+        task.cancel()
         
     async def resolve_ticket(self, interaction: discord.Interaction, ticket_id: int):
         await interaction.response.defer()
@@ -479,7 +481,7 @@ class Ticket:
         await asyncio.sleep(2)
         await channel.delete()
     
-    async def delete_channel_on_timeout(channel: discord.TextChannel, timeout):
+    async def delete_channel_on_timeout(self, channel: discord.TextChannel, timeout):
         try:
             await asyncio.wait_for(asyncio.sleep(timeout), timeout=timeout)
         except asyncio.TimeoutError:
