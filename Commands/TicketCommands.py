@@ -395,7 +395,7 @@ class Ticket:
 
         await interaction.channel.send(f"Added member '{discord_id}' to team '{team_name}' in project '{project_id}'.")
 
-    async def send_tickets_embeds(self, channel: discord.TextChannel, interaction_user, tickets_dict: dict, amount: int):
+    async def send_tickets_embeds(self, channel: discord.TextChannel, interaction_user, tickets_dict: dict):
             if len(tickets_dict) < 1:
                 await channel.send("You do not have any (open) Tickets!")
                 self.delete_sub_channel(channel=channel)
@@ -418,8 +418,11 @@ class Ticket:
             message = await channel.send("React with ✅ if you're done getting your tickets!")
             await message.add_reaction('✅')
             
+            def check(reaction, user):
+                return user == interaction_user and str(reaction.emoji) == '✅'
+            
             try:
-                reaction, _ = await self.client.wait_for('reaction_add', check=lambda m: m.author == interaction_user, timeout=600) # Wait for reaction or 10 minutes
+                reaction = await self.client.wait_for('reaction_add', check=check, timeout=600) # Wait for reaction or 10 minutes
                 if str(reaction.emoji) == '✅':
                     await channel.send("Tickets received, deleting this channel...")
                     await self.delete_sub_channel(channel=channel)
