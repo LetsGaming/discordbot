@@ -148,7 +148,7 @@ class Ticket:
            
     async def get_ticket(self, interaction: discord.Interaction, get_all: Optional[bool]=False, get_resolved: Optional[bool]=False):
         channel = await self.create_sub_channel(interaction=interaction)
-        channel.send(f"Welcome {interaction.user.mention}! This is your ticket channel.")
+        await channel.send(f"Welcome {interaction.user.mention}! This is your ticket channel.")
         
         cursor = self.connection.cursor()
         cursor.execute("SELECT * FROM projects WHERE guild_id = %s", (interaction.guild.id,))
