@@ -8,6 +8,8 @@ class BotClient(discord.Client):
     def __init__(self):
         intents = discord.Intents.default()
         intents.message_content = True
+        intents.members = True
+        intents.guilds = True
         super().__init__(intents=intents)
         self.command_handler = None
         self.config = self.load_config()
@@ -21,13 +23,13 @@ class BotClient(discord.Client):
         self.command_handler = CommandHandler.Commands(self)
         await self.command_handler.register_commands()
     
-    async def on_guild_join(guild: discord.Guild):
+    async def on_guild_join(self, guild):
         # Create channels
         category = await guild.create_category("Tickets")
         await category.create_text_channel("create-ticket")
         await category.create_text_channel("get-ticket")
     
-    async def on_member_join(member: discord.Member):
+    async def on_member_join(self, member):
         role = discord.utils.get(member.guild.roles, name = "Member")
         await member.add_roles(role)
 
