@@ -9,8 +9,9 @@ import mysql.connector
 from discord import app_commands
 
 class Ticket:
-    def __init__(self, tree: app_commands.CommandTree):
+    def __init__(self, tree: app_commands.CommandTree, client: discord.client):
         self.tree = tree
+        self.client = client
         self.config = self.load_config()
         self.connection = mysql.connector.connect(
             host= self.config["host"],
