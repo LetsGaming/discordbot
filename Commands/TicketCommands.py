@@ -473,6 +473,7 @@ class Ticket:
         await channel.purge(limit=amount, bulk=True)
         
     async def create_sub_channel(self, interaction: discord.Interaction):
+        guild = interaction.guild
         category = interaction.channel.category
         if interaction.channel.name == "get-ticket":
             channel_name = f"{interaction.user.nick}-Tickets"
@@ -480,7 +481,13 @@ class Ticket:
             channel_name = f"Ticket_Creation-{interaction.user.nick}"
         else:
             channel_name = "Unknown"
-        channel = await category.create_text_channel(channel_name)
+        member_role = discord.utils.get(interaction.guild.roles, name = "Member")
+        overwrites = {
+            interaction.guild.default_role: discord.PermissionOverwrite(read_messages=False),
+            member_role: discord.PermissionOverwrite(read_messages=False),
+            interaction.user: discord.PermissionOverwrite(read_messages=True),
+        }
+        channel = await guild.create_text_channel(channel_name, overwrites=overwrites, category=category)
         return channel
     
     async def delete_sub_channel(self, channel: discord.TextChannel):
