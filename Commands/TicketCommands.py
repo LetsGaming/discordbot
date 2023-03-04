@@ -474,13 +474,14 @@ class Ticket:
         
     async def create_sub_channel(self, interaction: discord.Interaction):
         category = interaction.channel.category
-        if interaction.channel.name == "get-tickets":
+        if interaction.channel.name == "get-ticket":
             channel_name = f"{interaction.user.nick}-Tickets"
-        elif interaction.channel.name == "create-tickets":
+        elif interaction.channel.name == "create-ticket":
             channel_name = f"Ticket_Creation-{interaction.user.nick}"
         else:
             channel_name = "Unknown"
-        return await category.create_text_channel(channel_name)
+        channel= await category.create_text_channel(channel_name)
+        channel.set_permissions(target=interaction.user)
     
     async def delete_sub_channel(self, channel: discord.TextChannel):
         await asyncio.sleep(2)
