@@ -43,6 +43,9 @@ class Ticket:
         guild = interaction.guild
         interaction_user = interaction.user
         
+        timeout = 120
+        asyncio.create_task(self.delete_channel_on_timeout(channel, timeout))
+        
         # Get the available projects from the database
         cursor = self.connection.cursor()
         cursor.execute("SELECT * FROM projects WHERE guild_id = %s", (guild.id,))
@@ -162,6 +165,9 @@ class Ticket:
         
         guild = interaction.guild
         interaction_user = interaction.user
+        
+        timeout = 120
+        asyncio.create_task(self.delete_channel_on_timeout(channel, timeout))
         
         cursor = self.connection.cursor()
         cursor.execute("SELECT * FROM projects WHERE guild_id = %s", (guild.id,))
@@ -431,7 +437,6 @@ class Ticket:
             await channel.send("10 minutes have passed. Deleting this channel...")
             await self.delete_sub_channel(channel=channel)
 
-
     def add_member(self, interaction: discord.Interaction, discord_id, team_id, project_id):
             cursor = self.connection.cursor()
             cursor.execute(("INSERT INTO members (id, guild_id, discord_id, team_id, project_id) VALUES (null, %s, %s, %s, %s)"), (interaction.guild.id, discord_id, team_id, project_id))
@@ -473,3 +478,10 @@ class Ticket:
     async def delete_sub_channel(self, channel: discord.TextChannel):
         await asyncio.sleep(2)
         await channel.delete()
+    
+    async def delete_channel_on_timeout(channel: discord.TextChannel, timeout):
+        try:
+            await asyncio.wait_for(asyncio.sleep(timeout), timeout=timeout)
+        except asyncio.TimeoutError:
+            await channel.delete()
+            print(f"Channel {channel.name} has been deleted due to inactivity.")
