@@ -396,39 +396,41 @@ class Ticket:
         await interaction.channel.send(f"Added member '{discord_id}' to team '{team_name}' in project '{project_id}'.")
 
     async def send_tickets_embeds(self, channel: discord.TextChannel, interaction_user, tickets_dict: dict):
-            if len(tickets_dict) < 1:
-                await channel.send("You do not have any (open) Tickets!")
-                self.delete_sub_channel(channel=channel)
-            else:
-                for ticket_index in tickets_dict:
-                    ticket = tickets_dict[ticket_index]
-                    embed = discord.Embed(title=ticket["ticket_title"], description=ticket["ticket_description"])
-                    embed.set_author(name=f"From: {ticket['ticket_author']}")
-                    embed.set_thumbnail(url=ticket["author_icon"])
-                    embed.add_field(name="ID", value=ticket["ticket_id"])
-                    embed.add_field(name="Deadline", value=ticket["ticket_deadline"].strftime('%d.%m.%Y'))
-                    if ticket["ticket_resolved"]:
-                        resolved = '✅'
-                        footer_text = f"Resolved: {resolved} \nResolved on date: {ticket['ticket_resolved_date'].strftime('%d.%m.%Y')}"
-                    else:
-                        resolved = '❌'
-                        footer_text = f"Resolved: {resolved}"
-                    embed.set_footer(text = footer_text)
-                    await channel.send(embed=embed)
-            message = await channel.send("React with ✅ if you're done getting your tickets!")
-            await message.add_reaction('✅')
-            
-            def check(reaction, user):
-                return user == interaction_user and str(reaction.emoji) == '✅'
-            
-            try:
-                reaction = await self.client.wait_for('reaction_add', check=check, timeout=600) # Wait for reaction or 10 minutes
-                if str(reaction.emoji) == '✅':
-                    await channel.send("Tickets received, deleting this channel...")
-                    await self.delete_sub_channel(channel=channel)
-            except asyncio.TimeoutError:
-                await channel.send("10 minutes have passed. Deleting this channel...")
+        check = '✅'
+        if len(tickets_dict) < 1:
+            await channel.send("You do not have any (open) Tickets!")
+            self.delete_sub_channel(channel=channel)
+        else:
+            for ticket_index in tickets_dict:
+                ticket = tickets_dict[ticket_index]
+                embed = discord.Embed(title=ticket["ticket_title"], description=ticket["ticket_description"])
+                embed.set_author(name=f"From: {ticket['ticket_author']}")
+                embed.set_thumbnail(url=ticket["author_icon"])
+                embed.add_field(name="ID", value=ticket["ticket_id"])
+                embed.add_field(name="Deadline", value=ticket["ticket_deadline"].strftime('%d.%m.%Y'))
+                if ticket["ticket_resolved"]:
+                    resolved = check
+                    footer_text = f"Resolved: {resolved} \nResolved on date: {ticket['ticket_resolved_date'].strftime('%d.%m.%Y')}"
+                else:
+                    resolved = '❌'
+                    footer_text = f"Resolved: {resolved}"
+                embed.set_footer(text=footer_text)
+                await channel.send(embed=embed)
+        message = await channel.send(f"React with {check} if you're done getting your tickets for {channel.mention}!")
+        await message.add_reaction(check)
+
+        def reaction_check(reaction, user):
+            return user == interaction_user and str(reaction.emoji) == check
+
+        try:
+            reaction, user = await self.client.wait_for('reaction_add', check=reaction_check, timeout=600) # Wait for reaction or 10 minutes
+            if str(reaction.emoji) == check:
+                await channel.send("Tickets received, deleting this channel...")
                 await self.delete_sub_channel(channel=channel)
+        except asyncio.TimeoutError:
+            await channel.send("10 minutes have passed. Deleting this channel...")
+            await self.delete_sub_channel(channel=channel)
+
 
     def add_member(self, interaction: discord.Interaction, discord_id, team_id, project_id):
             cursor = self.connection.cursor()
