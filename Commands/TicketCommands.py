@@ -172,7 +172,6 @@ class Ticket:
         cursor.execute("INSERT INTO tickets (id, guild_id, project_id, team_id, member_id, ticket_author, ticket_author_icon, ticket_title, ticket_description, deadline, resolved, resolve_date) VALUES (null,%s, %s, %s, %s, %s, %s, %s, %s, %s, 0, null)",
                          (interaction.guild.id, project_id, team_id, member_id, ticket_author.nick, ticket_author.avatar.url, ticket_title, ticket_description, ticket_deadline_date))
         self.connection.commit()
-        print(message_amount)
         await self.delete_command_messages(interaction = interaction, amount=message_amount)
         await interaction.channel.send("Ticket created successfully!")
            
@@ -239,7 +238,8 @@ class Ticket:
                 "ticket_resolved": ticket_resolved,
                 "ticket_resolved_date": ticket_resolved_date
             }
-        await self.send_tickets_embeds(interaction, tickets_dict, message_amount)
+        await interaction.followup.send("Getting your tickets...")
+        await self.send_tickets_embeds(interaction, tickets_dict, message_amount+1)
         
     async def resolve_ticket(self, interaction: discord.Interaction, ticket_id: int):
         await interaction.response.defer()
