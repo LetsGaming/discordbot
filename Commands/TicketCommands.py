@@ -474,7 +474,12 @@ class Ticket:
         
     async def create_sub_channel(self, interaction: discord.Interaction):
         category = interaction.channel.category
-        channel_name = f"{interaction.channel.name}|{interaction.user.nick}"
+        if interaction.channel.name == "get-tickets":
+            channel_name = f"{interaction.user.nick}-Tickets"
+        elif interaction.channel.name == "create-tickets":
+            channel_name = f"Ticket_Creation-{interaction.user.nick}"
+        else:
+            channel_name = "Unknown"
         return await category.create_text_channel(channel_name)
     
     async def delete_sub_channel(self, channel: discord.TextChannel):
