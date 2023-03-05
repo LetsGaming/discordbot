@@ -169,9 +169,10 @@ class TicketSystem:
         user = await self.client.fetch_user(ticket.user_id)
         
         # Send a notification to the user
-        guild = await self.client.fetch_guild(guild_id=ticket.guild_id)
-        message = f"Hello {user.name}, your ticket #{ticket.id} has been created in the server {guild.mention}!"
-        await user.send(message)
+        guild = await self.client.fetch_guild(ticket.guild_id)
+        message = f"Hello {user.name}, your ticket #{ticket.id} has been created in the server {guild.name}!"
+        dm = await user.create_dm()
+        dm.send(message)
            
     async def get_ticket(self, interaction: discord.Interaction, get_all: Optional[bool]=False, get_resolved: Optional[bool]=False):
         await interaction.response.defer()
