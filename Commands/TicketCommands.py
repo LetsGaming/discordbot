@@ -7,7 +7,6 @@ from typing import Optional
 import discord
 import mysql.connector
 from discord import app_commands
-from TicketCommands import Ticket
 
 class TicketSystem:
     def __init__(self, tree: app_commands.CommandTree, client: discord.Client):
@@ -165,7 +164,7 @@ class TicketSystem:
         ticket = Ticket(id=ticket_id, user_id=discord_member.id, guild_id=guild.id)
         await self.on_ticket_create(ticket=ticket)
     
-    async def on_ticket_create(self, ticket: Ticket):
+    async def on_ticket_create(self, ticket):
         # Get the user who created the ticket
         user = await self.client.fetch_user(ticket.user_id)
         
