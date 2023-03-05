@@ -161,18 +161,23 @@ class TicketSystem:
         ticket_id = cursor.lastrowid
         await channel.send("Ticket created successfully!")
         await self.delete_sub_channel(channel=channel)
-        ticket = Ticket(id=ticket_id, user_id=discord_member.id, guild_id=guild.id)
+        
+        ticket = Ticket(id=ticket_id, team_member_id=member_id, guild_id=guild.id)
         await self.on_ticket_create(ticket=ticket)
     
     async def on_ticket_create(self, ticket):
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT discord_id FROM members WHERE id = %s", (ticket.team_member_id,))
+        member_tuple = cursor.fetchone()
+        discord_id = member_tuple[0]
         # Get the user who created the ticket
-        user = await self.client.fetch_user(ticket.user_id)
+        user = await self.get_user(user_id=discord_id)
         
         # Send a notification to the user
         guild = await self.client.fetch_guild(ticket.guild_id)
         message = f"Hello {user.name}, your ticket #{ticket.id} has been created in the server {guild.name}!"
-        dm = await user.create_dm()
-        dm.send(message)
+        channel = await user.create_dm()
+        await channel.send(content=message)
            
     async def get_ticket(self, interaction: discord.Interaction, get_all: Optional[bool]=False, get_resolved: Optional[bool]=False):
         await interaction.response.defer()
@@ -523,8 +528,8 @@ class TicketSystem:
                 print(f"Channel {channel.name} has been deleted due to inactivity.")
 
 class Ticket:
-    def __init__(self, id, user_id, guild_id, created_at=None):
+    def __init__(self, id, team_member_id, guild_id, created_at=None):
         self.id = id
-        self.user_id = user_id
+        self.team_member_id = team_member_id
         self.guild_id = guild_id
         self.created_at = created_at or datetime.utcnow()
