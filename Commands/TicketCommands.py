@@ -169,7 +169,7 @@ class TicketSystem:
         user = await self.client.fetch_user(ticket.user_id)
         
         # Send a notification to the user
-        guild = discord.Object(ticket.guild_id)
+        guild = await self.client.fetch_guild(id=ticket.guild_id)
         message = f"Hello {user.name}, your ticket #{ticket.id} has been created in the server {guild.mention}!"
         await user.send(message)
            
