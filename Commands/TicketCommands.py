@@ -7,9 +7,10 @@ from typing import Optional
 import discord
 import mysql.connector
 from discord import app_commands
+from TicketCommands import Ticket
 
-class Ticket:
-    def __init__(self, tree: app_commands.CommandTree, client: discord.client):
+class TicketSystem:
+    def __init__(self, tree: app_commands.CommandTree, client: discord.Client):
         self.tree = tree
         self.client = client
         self.config = self.load_config()
@@ -158,8 +159,20 @@ class Ticket:
         cursor.execute("INSERT INTO tickets (id, guild_id, project_id, team_id, member_id, ticket_author, ticket_author_icon, ticket_title, ticket_description, deadline, resolved, resolve_date) VALUES (null,%s, %s, %s, %s, %s, %s, %s, %s, %s, 0, null)",
                          (guild.id, project_id, team_id, member_id, ticket_author.nick, ticket_author.avatar.url, ticket_title, ticket_description, ticket_deadline_date))
         self.connection.commit()
+        ticket_id = cursor.lastrowid
         await channel.send("Ticket created successfully!")
         await self.delete_sub_channel(channel=channel)
+        ticket = Ticket(id=ticket_id, user_id=discord_member.id, guild_id=guild.id)
+        await self.on_ticket_create(ticket=ticket)
+    
+    async def on_ticket_create(self, ticket: Ticket):
+        # Get the user who created the ticket
+        user = await self.client.fetch_user(ticket.user_id)
+        
+        # Send a notification to the user
+        guild = discord.Object(ticket.guild_id)
+        message = f"Hello {user.name}, your ticket #{ticket.id} has been created in the server {guild.mention}!"
+        await user.send(message)
            
     async def get_ticket(self, interaction: discord.Interaction, get_all: Optional[bool]=False, get_resolved: Optional[bool]=False):
         await interaction.response.defer()
@@ -471,6 +484,10 @@ class Ticket:
         user_id = int(re.search(r'\d+', userId).group())
         return await guild.fetch_member(user_id)
     
+    async def get_user(self, user_id):
+        user_id = int(re.search(r'\d+', user_id).group())
+        return await self.client.fetch_user(user_id)
+    
     async def delete_command_messages(self, channel: discord.TextChannel, amount: int):
         await asyncio.sleep(2)
         await channel.purge(limit=amount, bulk=True)
@@ -504,3 +521,10 @@ class Ticket:
             if not task.cancelled():
                 await channel.delete()
                 print(f"Channel {channel.name} has been deleted due to inactivity.")
+
+class Ticket:
+    def __init__(self, id, user_id, guild_id, created_at=None):
+        self.id = id
+        self.user_id = user_id
+        self.guild_id = guild_id
+        self.created_at = created_at or datetime.utcnow()

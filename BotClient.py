@@ -32,6 +32,6 @@ class BotClient(discord.Client):
     async def on_member_join(self, member):
         role = discord.utils.get(member.guild.roles, name = "Member")
         await member.add_roles(role)
-
+        
 _client = BotClient()
 _client.run(_client.token)

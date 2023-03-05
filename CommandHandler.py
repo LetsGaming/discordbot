@@ -5,7 +5,7 @@ from discord import app_commands
 from Commands.ModerationCommands import Moderation
 from Commands.QuoteCommands import Quote
 from Commands.RedditCommand import Reddit
-from Commands.TicketCommands import Ticket
+from Commands.TicketCommands import TicketSystem
 from Commands.WeatherCommand import Weather
 from Commands.WebsiteCommand import WebsiteUtils
 from Commands.ConvertCommands import Conversion
@@ -19,7 +19,7 @@ class Commands():
         self.quoteCommands = Quote(client=client)
         self.websiteCommand = WebsiteUtils()
         self.conversionCommand = Conversion()
-        self.ticket = Ticket(tree=self.tree, client=client)
+        self.ticketSystem = TicketSystem(tree=self.tree, client=client)
         self.synced = False #Sets the synced bool to false
         
     async def register_commands(self):
@@ -31,7 +31,7 @@ class Commands():
         self.tree.command(name="about", description="Tries to find the about us page of a given business and returns it's information")(self.websiteCommand.get_business_info)
         self.tree.command(name="conversion", description="Gets the conversion rate of Currency X to Currency Y")(self.conversionCommand.get_convertion_rate)
         self.tree.command(name="currencies", description="Returns a list of all the valid currency-codes")(self.conversionCommand.get_currencies)
-        await self.ticket.register_commands()
+        await self.ticketSystem.register_commands()
 
         if not self.synced: #Checks if the commands aren't already synced
             await self.tree.sync() #Syncs the commands with discords server
