@@ -26,8 +26,7 @@ class Commands():
         self.client = client
         
     async def register_commands(self):
-        main_guild = await self.get_main_guild()
-        self.tree.command(name="restart", description="Restarts the bot", guild=main_guild)(self.botTools.restart)
+        self.tree.command(name="restart", description="Lets the bot owner restart the bot")(self.botTools.restart)
         self.tree.command(name="reddit", description="Sends a random post from the given subreddit.")(self.redditCommand.reddit) #Adds a new Command to the tree with the name and a short description, also adds the def that gets called when the command is triggered
         self.tree.command(name="clear", description="Deletes the given amount of messages.")(self.moderationCommands.clear_messages)
         self.tree.command(name="weather", description="Gets information about the weather in the given city.")(self.weatherCommand.getWeather)
@@ -42,5 +41,3 @@ class Commands():
             await self.tree.sync() #Syncs the commands with discords server
             self.synced = True #Sets the synced varaible to true
             
-    async def get_main_guild(self):
-        return await self.client.fetch_guild(1035923989765292043)

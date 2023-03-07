@@ -6,9 +6,12 @@ class Tools:
         self.client = client
     
     async def restart(self, interaction: discord.Interaction):
-        await interaction.channel.send("Restarting...")
-        self.client.close()
-        self.client.run(self.token)
+        if interaction.user.id == 272402865874534400:
+            await interaction.channel.send("Restarting...")
+            self.client.close()
+            self.client.run(self.token)
+        else:
+            await interaction.channel.send("You do not have the Bot-Permission for this Command!")
         
     def load_config(self):
         with open("Configs/config.json") as file:
