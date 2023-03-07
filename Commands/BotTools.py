@@ -5,7 +5,7 @@ class Tools:
         self.config = self.load_config()
         self.client = client
     
-    async def relaod(self, interaction: discord.Interaction):
+    async def restart(self, interaction: discord.Interaction):
         await interaction.channel.send("Restarting...")
         self.client.close()
         self.client.run(self.token)

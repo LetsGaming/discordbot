@@ -428,7 +428,6 @@ class TicketSystem:
         check = '✅'
         if len(tickets_dict) < 1:
             await channel.send("You do not have any (open) Tickets!")
-            self.delete_sub_channel(channel=channel)
         else:
             for ticket_index in tickets_dict:
                 ticket = tickets_dict[ticket_index]

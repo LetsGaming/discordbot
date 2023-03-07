@@ -1,6 +1,7 @@
 
 import discord
 from discord import app_commands
+from Commands.BotTools import Tools
 
 from Commands.ModerationCommands import Moderation
 from Commands.QuoteCommands import Quote
@@ -13,6 +14,7 @@ from Commands.ConvertCommands import Conversion
 class Commands():
     def __init__(self, client: discord.Client):
         self.tree = app_commands.CommandTree(client=client) #Creates a new CommandTree to work with discods slash-commands
+        self.botTools = Tools(client=client)
         self.moderationCommands = Moderation()
         self.redditCommand = Reddit()
         self.weatherCommand = Weather()
@@ -24,7 +26,8 @@ class Commands():
         self.client = client
         
     async def register_commands(self):
-        self.tree.command(name="restart", description="Restarts the bot", guild=self.get_main_guild())
+        main_guild = await self.get_main_guild()
+        self.tree.command(name="restart", description="Restarts the bot", guild=main_guild)(self.botTools.restart)
         self.tree.command(name="reddit", description="Sends a random post from the given subreddit.")(self.redditCommand.reddit) #Adds a new Command to the tree with the name and a short description, also adds the def that gets called when the command is triggered
         self.tree.command(name="clear", description="Deletes the given amount of messages.")(self.moderationCommands.clear_messages)
         self.tree.command(name="weather", description="Gets information about the weather in the given city.")(self.weatherCommand.getWeather)
@@ -40,4 +43,4 @@ class Commands():
             self.synced = True #Sets the synced varaible to true
             
     async def get_main_guild(self):
-        return self.client.fetch_guild(guild_id="1035923989765292043")
+        return await self.client.fetch_guild(1035923989765292043)
