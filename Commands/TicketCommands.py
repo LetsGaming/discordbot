@@ -20,6 +20,11 @@ class TicketSystem:
             database="pythonbot"
         )
         self.lastResult = None
+        self.ping_timer = Timer(120, self._ping_db) # send a ping request every 120 seconds
+        self.ping_timer.start() # start the timer
+        
+    def _ping_db(self):
+        self.connection.ping(reconnect=True) # send a ping request to keep the connection active
         
     def load_config(self):
         with open("Configs/sqlconfig.json") as file:

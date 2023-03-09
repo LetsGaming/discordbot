@@ -12,14 +12,14 @@ from Commands.ConvertCommands import Conversion
 
 class Commands():
     def __init__(self, client: discord.Client):
-        self.tree = app_commands.CommandTree(client=self.client) #Creates a new CommandTree to work with discods slash-commands
+        self.tree = app_commands.CommandTree(client=client) #Creates a new CommandTree to work with discods slash-commands
         self.moderationCommands = Moderation()
         self.redditCommand = Reddit()
         self.weatherCommand = Weather()
-        self.quoteCommands = Quote(client=self.client)
+        self.quoteCommands = Quote(client=client)
         self.websiteCommand = WebsiteUtils()
         self.conversionCommand = Conversion()
-        self.ticketSystem = TicketSystem(tree=self.tree, client=self.client)
+        self.ticketSystem = TicketSystem(tree=self.tree, client=client)
         self.client = client
         self.synced = False
         self.tree.command(name="reload", description="Reloads all the bot commands.")(self.reload)
@@ -41,11 +41,7 @@ class Commands():
 
     async def reload(self, interaction: discord.Interaction):
         if interaction.user.id == 272402865874534400:
-            # Unregister all commands
-            self.tree.clear_commands()
-
             # Re-initialize all commands
-            self.tree = app_commands.CommandTree(client=self.client) #Creates a new CommandTree to work with discods slash-commands
             self.moderationCommands = Moderation()
             self.redditCommand = Reddit()
             self.weatherCommand = Weather()
@@ -53,10 +49,6 @@ class Commands():
             self.websiteCommand = WebsiteUtils()
             self.conversionCommand = Conversion()
             self.ticketSystem = TicketSystem(tree=self.tree, client=self.client)
-
-            # Re-register all commands
-            self.synced = False
-            await self.register_commands() 
         else:
             interaction.channel.send("You're not the bot owner!")
      
