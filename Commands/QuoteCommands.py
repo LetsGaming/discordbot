@@ -18,12 +18,13 @@ class Quote:
             database="pythonbot"
         )
         self.client = client
-        self.lastResult = None
-        self.ping_timer = Timer(120, self._ping_db) # send a ping request every 120 seconds
-        self.ping_timer.start() # start the timer
+        self.ping_timer = Timer(500, self.__restart_connection) 
+        self.ping_timer.start() 
         
-    def _ping_db(self):
-        self.connection.ping(reconnect=True) # send a ping request to keep the connection active
+    def __restart_connection(self):
+        self.connection.connect()
+        self.ping_timer = Timer(500, self.__restart_connection) 
+        self.ping_timer.start()
         
     def load_config(self):
         with open("Configs/sqlconfig.json") as file:
