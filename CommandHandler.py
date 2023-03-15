@@ -29,7 +29,7 @@ class Commands():
         self.tree.command(name="clear", description="Deletes the given amount of messages.")(self.moderationCommands.clear_messages)
         self.tree.command(name="weather", description="Gets information about the weather in the given city.")(self.weatherCommand.getWeather)
         self.tree.command(name="quote", description="Lets you save a quote from a user.")(self.quoteCommands.create_quote)
-        self.tree.command(name="getquote", description="Returns a random saved quote from this server.")(self.quoteCommands.get_quote)
+        self.tree.command(name="get_quote", description="Returns a random saved quote from this server.")(self.quoteCommands.get_quote)
         self.tree.command(name="about", description="Tries to find the about us page of a given business and returns it's information")(self.websiteCommand.get_business_info)
         self.tree.command(name="conversion", description="Gets the conversion rate of Currency X to Currency Y")(self.conversionCommand.get_convertion_rate)
         self.tree.command(name="currencies", description="Returns a list of all the valid currency-codes")(self.conversionCommand.get_currencies)
