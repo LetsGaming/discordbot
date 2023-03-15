@@ -20,12 +20,13 @@ class TicketSystem:
             password= self.config["password"],
             database="pythonbot"
         )
-        self.ping_timer = Timer(500, self.__restart_connection) 
+        self.ping_timer = Timer(1000, self.__restart_connection) 
         self.ping_timer.start() 
         
     def __restart_connection(self):
-        self.connection.connect()
-        self.ping_timer = Timer(500, self.__restart_connection) 
+        if not self.connection.is_connected:
+            self.connection.connect()
+        self.ping_timer = Timer(1000, self.__restart_connection) 
         self.ping_timer.start() 
         
     def load_config(self):
