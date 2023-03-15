@@ -301,45 +301,54 @@ class TicketSystem:
         self.connection.commit()
         project_id = cursor.lastrowid
         
-        # Prompt for team name
-        await interaction.followup.send("What would you like to name your first team?")
+        # Prompt for team amounts
+        await interaction.followup.send("How many teams do you want to add?")
         try:
-            team_name_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
+            team_amount_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
         except asyncio.TimeoutError:
             await interaction.followup.send("Project creation timed out.")
             return
-        team_name = team_name_msg.content
-        
-        # Create the team and prompt for member addition
-        team_id = self.create_team(interaction=interaction, name=team_name, description="", project_id=project_id)
-        interaction.response.defer()
-        while True:
-            await interaction.followup.send("Would you like to add a member to the team? (y/n)")
+        team_amount = team_amount_msg.content
+
+        for x in range(team_amount):
+        # Prompt for team name
+            await interaction.followup.send(f"What would you like to name your {x+1}. team?")
             try:
-                add_member_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
+                team_name_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
             except asyncio.TimeoutError:
-                await interaction.followup.send("Member addition timed out.")
+                await interaction.followup.send("Project creation timed out.")
                 return
-            add_member = add_member_msg.content.lower()
-            if add_member == "n":
-                break
-            elif add_member != "y":
-                await interaction.followup.send("Invalid input. Please enter 'y' or 'n'.")
-                continue
+            team_name = team_name_msg.content
             
-            # Prompt for member name and email
-            await interaction.followup.send("What is the name of the member you would like to add?")
-            try:
-                member_name_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
-            except asyncio.TimeoutError:
-                await interaction.followup.send("Member addition timed out.")
-                return
-            member_name = member_name_msg.content
-            if not member_name.startswith("<"):
-                await interaction.followup.send(f"'{member_name}' is not a valid form. Please use @username!")
-                continue
-            # Add the member to the team
-            self.add_member(interaction=interaction,discord_id=member_name, team_id=team_id, project_id=project_id) # Change the arguments to match your add_member function
+            # Create the team and prompt for member addition
+            team_id = self.create_team(interaction=interaction, name=team_name, description="", project_id=project_id)
+            while True:
+                await interaction.followup.send("Would you like to add a member to the team? (y/n)")
+                try:
+                    add_member_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
+                except asyncio.TimeoutError:
+                    await interaction.followup.send("Member addition timed out.")
+                    return
+                add_member = add_member_msg.content.lower()
+                if add_member == "n":
+                    break
+                elif add_member != "y":
+                    await interaction.followup.send("Invalid input. Please enter 'y' or 'n'.")
+                    continue
+                
+                # Prompt for member name
+                await interaction.followup.send("What is the name of the member you would like to add?")
+                try:
+                    member_name_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
+                except asyncio.TimeoutError:
+                    await interaction.followup.send("Member addition timed out.")
+                    return
+                member_name = member_name_msg.content
+                if not member_name.startswith("<"):
+                    await interaction.followup.send(f"'{member_name}' is not a valid form. Please use @username!")
+                    continue
+                # Add the member to the team
+                self.add_member(interaction=interaction,discord_id=member_name, team_id=team_id, project_id=project_id)
         
         await interaction.channel.send(f"Project '{project_name}' successfully created.")
 
