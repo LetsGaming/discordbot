@@ -30,7 +30,7 @@ class BirthdayUtils:
         user = birthday.user
         date = birthday.date
 
-        discord_id = f"@<{user.id}>"
+        discord_id = f"<@{user.id}>"
         cursor = self.connection.cursor()
         cursor.execute("SELECT id, date FROM birthdays WHERE discord_id = %s", (discord_id,))
         result = cursor.fetchone()

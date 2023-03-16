@@ -42,7 +42,7 @@ class BotClient(discord.Client):
         await member.add_roles(role)
 
     async def on_message(self, message):
-        if message.channel.name == "add-birthday":
+        if message.channel.name == "add-birthday" and message.author.id != _client.user.id:
             msg_content = message.content
             date_obj = datetime.strptime(msg_content, '%d.%m.%Y')
             birthday_date = date_obj.strftime('%Y-%m.%d')
