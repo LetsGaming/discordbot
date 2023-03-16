@@ -20,6 +20,8 @@ class Quote:
         self.client = client
         self.ping_timer = Timer(1000, self.__restart_connection) 
         self.ping_timer.start() 
+
+        self.lastResult = None
         
     def __restart_connection(self):
         if not self.connection.is_connected:
@@ -38,7 +40,9 @@ class Quote:
         user = None
         if username.startswith("<"):
             user = await self.get_user(user_id=username)
-
+        else:
+            await interaction.channel.send("Invalid form please use @username !")
+            
         quote_date = date.today().isoformat()
         avatar = user.avatar.url if user else "none"
         name = user.name if user else username

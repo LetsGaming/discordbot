@@ -23,7 +23,7 @@ class BotClient(discord.Client):
 
     async def on_ready(self):
         self.command_handler = CommandHandler.Commands(self)
-        self.birthdayUtils = BirthdayUtils()
+        self.birthdayUtils = BirthdayUtils(self)
         await self.command_handler.register_commands()
     
     async def on_guild_join(self, guild):

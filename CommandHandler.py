@@ -1,4 +1,3 @@
-
 import discord
 from discord import app_commands
 
@@ -9,9 +8,9 @@ from Commands.TicketCommands import TicketSystem
 from Commands.WeatherCommand import Weather
 from Commands.WebsiteCommand import WebsiteUtils
 from Commands.ConvertCommands import Conversion
-
+from Commands.BirthdayCommands import BirthdayUtils
 class Commands():
-    def __init__(self, client: discord.Client):
+    def __init__(self, client: discord.Client, birhdayUtils: BirthdayUtils):
         self.tree = app_commands.CommandTree(client=client) #Creates a new CommandTree to work with discods slash-commands
         self.moderationCommands = Moderation()
         self.redditCommand = Reddit()
@@ -20,6 +19,7 @@ class Commands():
         self.websiteCommand = WebsiteUtils()
         self.conversionCommand = Conversion()
         self.ticketSystem = TicketSystem(tree=self.tree, client=client)
+        self.birthdayUtils = birhdayUtils
         self.client = client
         self.synced = False
         self.tree.command(name="reload", description="Reloads all the bot commands.")(self.reload)
@@ -33,6 +33,7 @@ class Commands():
         self.tree.command(name="about", description="Tries to find the about us page of a given business and returns it's information")(self.websiteCommand.get_business_info)
         self.tree.command(name="conversion", description="Gets the conversion rate of Currency X to Currency Y")(self.conversionCommand.get_convertion_rate)
         self.tree.command(name="currencies", description="Returns a list of all the valid currency-codes")(self.conversionCommand.get_currencies)
+        self.tree.command(name="get_birthday", description="Returns the birthdate of a given user if it exists")(self.birthdayUtils.get_birthday)
         await self.ticketSystem.register_commands()
 
         if not self.synced: #Checks if the commands aren't already synced
