@@ -4,7 +4,7 @@ from discord import app_commands
 from Commands.ModerationCommands import Moderation
 from Commands.QuoteCommands import Quote
 from Commands.RedditCommand import Reddit
-from Commands.TicketCommands import TicketSystem
+from Commands.Tickets.TicketCommands import TicketSystem
 from Commands.WeatherCommand import Weather
 from Commands.WebsiteCommand import WebsiteUtils
 from Commands.ConvertCommands import Conversion
