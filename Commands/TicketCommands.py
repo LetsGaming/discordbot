@@ -134,7 +134,7 @@ class TicketSystem:
         
         await channel.send("What would you like the title of the ticket to be?")
         try:
-            ticket_title_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction_user, timeout=60)
+            ticket_title_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction_user, timeout=100)
         except asyncio.TimeoutError:
             await channel.send("Ticket creation timed out.")
             await self.delete_sub_channel(channel=channel)
@@ -143,7 +143,7 @@ class TicketSystem:
 
         await channel.send("What would you like the reason/description for the ticket to be?")
         try:
-            ticket_description_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction_user, timeout=60)
+            ticket_description_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction_user, timeout=180)
         except asyncio.TimeoutError:
             await channel.send("Ticket creation timed out.")
             await self.delete_sub_channel(channel=channel)
@@ -183,7 +183,7 @@ class TicketSystem:
         
         # Send a notification to the user
         guild = await self.client.fetch_guild(ticket.guild_id)
-        message = f"Hello {user.name}, your ticket #{ticket.id} has been created in the server {guild.name}!"
+        message = f"Hello {user.name}, you have a new Ticket: #{ticket.id} in the server {guild.name} go check it out!"
         channel = await user.create_dm()
         await channel.send(content=message)
            
