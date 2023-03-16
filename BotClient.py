@@ -1,9 +1,10 @@
-import datetime
+from datetime import datetime
 import json
 
 import discord
 import CommandHandler
 from Commands.BirthdayCommands import BirthdayUtils
+from Commands.BirthdayCommands import Birthday
 
 class BotClient(discord.Client):
     def __init__(self):
@@ -45,7 +46,8 @@ class BotClient(discord.Client):
             msg_content = message.content
             date_obj = datetime.strptime(msg_content, '%d.%m.%Y')
             birthday_date = date_obj.strftime('%Y-%m.%d')
-            self.birthdayUtils.add_birthday(guild=message.guild, date=birthday_date, user=message.author)
+            birthday = Birthday(guild=message.channel.guild, channel=message.channel, user=message.author, date=birthday_date)
+            await self.birthdayUtils.add_birthday(birthday=birthday)
 
         
 _client = BotClient()
