@@ -3,7 +3,7 @@ import json
 
 import discord
 import CommandHandler
-from BirthdayCommands import BirthdayUtils
+from Commands.BirthdayCommands import BirthdayUtils
 
 class BotClient(discord.Client):
     def __init__(self):

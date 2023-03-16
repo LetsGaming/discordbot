@@ -31,7 +31,7 @@ CREATE TABLE birthdays (
   id INT NOT NULL AUTO_INCREMENT,
   guild_id BIGINT NOT NULL,
   discord_id VARCHAR(255) NOT NULL,
-  date DATE NOT NULL,
+  date DATE NOT NULL
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
