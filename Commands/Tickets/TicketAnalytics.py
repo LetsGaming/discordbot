@@ -29,6 +29,7 @@ class TicketStatistics:
         
     async def get_ticket_stats(self, interaction: discord.Interaction):
         await interaction.response.defer()
+        await interaction.followup.send("Gathering data...")
         cursor = self.connection.cursor()
 
         guild_id = interaction.guild.id
@@ -55,9 +56,7 @@ class TicketStatistics:
         resolved_tickets = len([ticket for ticket in tickets if ticket[10]])
         unresolved_tickets = len([ticket for ticket in tickets if not ticket[10]])
 
-        today = datetime.date.today()
-
-        tickets_within_deadline = [ticket for ticket in tickets if not ticket[10] and ticket[9] >= today]
+        tickets_within_deadline = len([ticket for ticket in tickets if ticket[10] and ticket[9] >= ticket[11]])
 
         stat_dict = {
             'top_author': most_common_author,
@@ -70,9 +69,9 @@ class TicketStatistics:
             'unresolved_tickets': unresolved_tickets,
             'tickets_in_deadline': tickets_within_deadline
         }
-        self.send_stat_embed(dict=stat_dict, interaction=interaction)
+        await self.send_stat_embed(dict=stat_dict, interaction=interaction)
 
-    def send_stat_embed(self, dict: dict, interaction: discord.Interaction):
+    async def send_stat_embed(self, dict: dict, interaction: discord.Interaction):
         embed = discord.Embed(title="Ticket Stats")
         embed.add_field(name="Most Tickets created by:", value=dict['top_author'])
         embed.add_field(name="Team with most Tickets:", value=dict['top_team'])
@@ -81,4 +80,4 @@ class TicketStatistics:
         embed.add_field(name="Amount of unresolved Tickets:", value=dict['unresolved_tickets'])
         embed.add_field(name="Amount within deadline:", value=dict['tickets_in_deadline'])
 
-        interaction.channel.send(embed=embed)
+        await interaction.channel.send(embed=embed)
