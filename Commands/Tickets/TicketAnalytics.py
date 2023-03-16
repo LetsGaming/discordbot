@@ -32,24 +32,25 @@ class TicketStatistics:
         cursor = self.connection.cursor()
 
         guild_id = interaction.guild.id
-        cursor.execute("Select * from Tickets where guild_id = %s", (guild_id,))
+        cursor.execute("Select * from tickets where guild_id = %s", (guild_id,))
 
         tickets = cursor.fetchall()
         
-        ticket_authors = [ticket[5] for ticket in tickets]
-        most_common_author, author_tickets_count = Counter(ticket_authors).most_common(1)[0]
-
-        team_counts = Counter([ticket[0] for ticket in tickets])
+        team_counts = Counter([ticket[3] for ticket in tickets])
         most_common_team_id, team_count = team_counts.most_common(1)[0]
         cursor.execute("Select name from teams where id = %s", (most_common_team_id,))
         result = cursor.fetchone()
         most_common_team = result[0]
 
-        member_counts = Counter([ticket[1] for ticket in tickets])
+        member_counts = Counter([ticket[4] for ticket in tickets])
         most_common_member_id, member_count = member_counts.most_common(1)[0]
+        print(most_common_member_id)
         cursor.execute("Select discord_id from members where id = %s", (most_common_member_id,))
         result = cursor.fetchone()
         most_common_member = result[0]
+
+        ticket_authors = [ticket[5] for ticket in tickets]
+        most_common_author, author_tickets_count = Counter(ticket_authors).most_common(1)[0]
 
         resolved_tickets = len([ticket for ticket in tickets if ticket[10]])
         unresolved_tickets = len([ticket for ticket in tickets if not ticket[10]])
