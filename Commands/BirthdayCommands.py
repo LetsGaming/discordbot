@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime
+from datetime import datetime, time
 import json
 from threading import Timer
 import discord
@@ -66,27 +66,34 @@ class BirthdayUtils:
     
     async def check_birthdays(self):
         while True:
-            # Get today's date
-            today = datetime.today().strftime('%m-%d')
-            
-            # Query the database for birthdays that match today's date
-            cursor = self.connection.cursor()
-            cursor.execute("SELECT discord_id FROM birthdays WHERE DATE_FORMAT(date, '%m-%d') = %s", (today,))
-            results = cursor.fetchall()
-            
-            # Send a birthday message to each user whose birthday it is
-            for result in results:
-                user = await self.client.fetch_user(result[0])
-                if user:
-                    # Get the celebrate birthday channel for the user's guild
-                    guild = user.guild
-                    celebrate_channel = discord.utils.get(guild.text_channels, name='celebrate-birthday')
-                    if celebrate_channel:
-                        await celebrate_channel.send(f"Happy birthday, {user.mention}!")
+            # Get the current time
+            now = datetime.now().time()
 
-            # Wait until tomorrow to check again
-            await asyncio.sleep(86400)
-            
+            # Check if it's 6 in the morning
+            if now.hour == 6 and now.minute == 0:
+                # Get today's date
+                today = datetime.today().strftime('%m-%d')
+
+                # Query the database for birthdays that match today's date
+                cursor = self.connection.cursor()
+                cursor.execute("SELECT discord_id FROM birthdays WHERE DATE_FORMAT(date, '%m-%d') = %s", (today,))
+                results = cursor.fetchall()
+
+                # Send a birthday message to each user whose birthday it is
+                for result in results:
+                    user = await self.client.fetch_user(result[0])
+                    if user:
+                        # Get the celebrate birthday channel for the user's guild
+                        guild = user.guild
+                        celebrate_channel = discord.utils.get(guild.text_channels, name='celebrate-birthday')
+                        if celebrate_channel:
+                            await celebrate_channel.send(f"Happy birthday, {user.mention}!")
+                            # Wait until tomorrow to check again
+                            await asyncio.sleep(86400 - datetime.now().timestamp() % 86400)
+
+            # Wait 1 minute before checking the time again
+            await asyncio.sleep(60)
+
 class Birthday:
     def __init__(self, guild, channel, user, date):
         self.guild = guild
