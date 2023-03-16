@@ -66,37 +66,37 @@ class BirthdayUtils:
     
     async def check_birthdays(self):
         while True:
-            # Get the current time
-            now = datetime.now().time()
+            # Get the current date and time
+            now = datetime.now()
 
             # Check if it's 6 in the morning
             if now.hour == 6 and now.minute == 0:
                 # Get today's date
-                today = datetime.today().strftime('%m-%d')
+                today = now.date()
 
                 # Query the database for birthdays that match today's date
                 cursor = self.connection.cursor()
-                cursor.execute("SELECT discord_id FROM birthdays WHERE DATE_FORMAT(date, '%m-%d') = %s", (today,))
+                cursor.execute("SELECT discord_id, date FROM birthdays WHERE DATE_FORMAT(date, '%m-%d') = %s", (today.strftime('%m-%d'),))
                 results = cursor.fetchall()
 
                 # Send a birthday message to each user whose birthday it is
                 for result in results:
                     user = await self.client.fetch_user(result[0])
                     if user:
-                        # Get the celebrate birthday channel for the user's guild
-                        guild = user.guild
-                        celebrate_channel = discord.utils.get(guild.text_channels, name='celebrate-birthday')
-                        if celebrate_channel:
-                            await celebrate_channel.send(f"Happy birthday, {user.mention}!")
+                        # Check if it's the user's birthday
+                        birthday_date = result[1].date()
+                        if birthday_date == today:
+                            # Get the celebrate birthday channel for the user's guild
+                            guild = user.guild
+                            celebrate_channel = discord.utils.get(guild.text_channels, name='celebrate-birthday')
+                            if celebrate_channel:
+                                await celebrate_channel.send(f"Happy birthday, {user.mention}!")
+            
+            # Wait until the next day at 6 am to check again
+            next_check = now.replace(hour=6, minute=0, second=0, microsecond=0) + timedelta(days=1)
+            sleep_seconds = (next_check - now).total_seconds()
+            await asyncio.sleep(sleep_seconds)
 
-            # Calculate the amount of time until the next 6:00 AM
-            next_check_time = datetime.combine(datetime.now().date(), time(hour=6, minute=0))
-            if now >= next_check_time:
-                next_check_time += timedelta(days=1)
-            time_until_next_check = (next_check_time - datetime.now()).total_seconds()
-
-            # Wait until it's time to check again
-            await asyncio.sleep(time_until_next_check)
 
 
 class Birthday:
