@@ -44,7 +44,7 @@ class BirthdayUtils:
 
         if result is not None:
             date = result[1]
-            await channel.send(f"{discord_id} Your Birthday is already added! It's: {date} !")
+            await channel.send(f"{discord_id} Your Birthday is already added! It's: {date.strftime('%d.%m.%Y')} !")
         else:
             cursor.execute("INSERT INTO birthdays (id, guild_id, discord_id, date) VALUES (null, %s, %s, %s)",
                          (guild.id, discord_id, date))
@@ -58,7 +58,7 @@ class BirthdayUtils:
             cursor.execute("Select date from birthdays where discord_id = %s", (username,))
             result = cursor.fetchone()
             if result is not None:
-                await interaction.followup.send(f"{interaction.user.mention} their birthday is: {result[0]} !")
+                await interaction.followup.send(f"{interaction.user.mention} their birthday is: {result[0].strftime('%d.%m.%Y')} !")
             else:
                 await interaction.followup.send(f"{interaction.user.mention} it seems like they haven't added their birthday yet.")
         else:
@@ -77,12 +77,12 @@ class BirthdayUtils:
             # Send a birthday message to each user whose birthday it is
             for result in results:
                 user = await self.client.fetch_user(result[0])
-            if user:
-                # Get the celebrate birthday channel for the user's guild
-                guild = user.guild
-                celebrate_channel = discord.utils.get(guild.text_channels, name='celebrate-birthday')
-                if celebrate_channel:
-                    await celebrate_channel.send(f"Happy birthday, {user.mention}!")
+                if user:
+                    # Get the celebrate birthday channel for the user's guild
+                    guild = user.guild
+                    celebrate_channel = discord.utils.get(guild.text_channels, name='celebrate-birthday')
+                    if celebrate_channel:
+                        await celebrate_channel.send(f"Happy birthday, {user.mention}!")
 
             # Wait until tomorrow to check again
             await asyncio.sleep(86400)
