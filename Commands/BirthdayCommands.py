@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 import json
 from threading import Timer
 import discord
@@ -88,11 +88,16 @@ class BirthdayUtils:
                         celebrate_channel = discord.utils.get(guild.text_channels, name='celebrate-birthday')
                         if celebrate_channel:
                             await celebrate_channel.send(f"Happy birthday, {user.mention}!")
-                            # Wait until tomorrow to check again
-                            await asyncio.sleep(86400 - datetime.now().timestamp() % 86400)
 
-            # Wait 1 minute before checking the time again
-            await asyncio.sleep(60)
+            # Calculate the amount of time until the next 6:00 AM
+            next_check_time = datetime.combine(datetime.now().date(), time(hour=6, minute=0))
+            if now >= next_check_time:
+                next_check_time += timedelta(days=1)
+            time_until_next_check = (next_check_time - datetime.now()).total_seconds()
+
+            # Wait until it's time to check again
+            await asyncio.sleep(time_until_next_check)
+
 
 class Birthday:
     def __init__(self, guild, channel, user, date):
