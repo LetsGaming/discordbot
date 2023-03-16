@@ -24,6 +24,17 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
+-- Tabellenstruktur für Tabelle `birthdays`
+--
+
+CREATE TABLE birthdays (
+  id INT NOT NULL AUTO_INCREMENT,
+  guild_id BIGINT NOT NULL,
+  discord_id VARCHAR(255) NOT NULL,
+  date DATE NOT NULL,
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
 -- Tabellenstruktur für Tabelle `members`
 --
 
@@ -165,6 +176,12 @@ INSERT INTO `tickets` (`id`, `guild_id`, `project_id`, `team_id`, `member_id`, `
 --
 -- Indizes der exportierten Tabellen
 --
+
+--
+-- Indizes für die Tabelle `birthdays`
+--
+ALTER TABLE `members`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indizes für die Tabelle `members`
