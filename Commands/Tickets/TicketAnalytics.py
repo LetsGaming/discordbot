@@ -45,7 +45,6 @@ class TicketStatistics:
 
         member_counts = Counter([ticket[4] for ticket in tickets])
         most_common_member_id, member_count = member_counts.most_common(1)[0]
-        print(most_common_member_id)
         cursor.execute("Select discord_id from members where id = %s", (most_common_member_id,))
         result = cursor.fetchone()
         most_common_member = result[0]
@@ -56,7 +55,8 @@ class TicketStatistics:
         resolved_tickets = len([ticket for ticket in tickets if ticket[10]])
         unresolved_tickets = len([ticket for ticket in tickets if not ticket[10]])
 
-        tickets_within_deadline = len([ticket for ticket in tickets if ticket[10] and ticket[9] >= ticket[11]])
+        cursor.execute("SELECT * FROM tickets WHERE resolve_date > deadline;")
+        tickets_within_deadline = len(result=cursor.fetchall())
 
         stat_dict = {
             'top_author': most_common_author,
