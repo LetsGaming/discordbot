@@ -22,8 +22,9 @@ class BotClient(discord.Client):
             self.token = config["token"]
 
     async def on_ready(self):
-        self.command_handler = CommandHandler.Commands(self)
         self.birthdayUtils = BirthdayUtils(self)
+        self.command_handler = CommandHandler.Commands(self, birhdayUtils=self.birthdayUtils)
+        
         await self.command_handler.register_commands()
     
     async def on_guild_join(self, guild):
