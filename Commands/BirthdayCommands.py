@@ -51,6 +51,7 @@ class BirthdayUtils:
                          (guild.id, discord_id, date))
             self.connection.commit()
             await channel.send(f"{discord_id} Your birthday got added successfully!")
+            await self.delete_command_messages(channel=channel, amount=2)
 
     async def get_birthday(self, interaction: discord.Interaction, username: str):
         await interaction.response.defer()
@@ -102,6 +103,9 @@ class BirthdayUtils:
         user_id = int(re.search(r'\d+', user_id).group())
         return await self.client.fetch_user(user_id)
 
+    async def delete_command_messages(self, channel: discord.TextChannel, amount: int):
+        await asyncio.sleep(2)
+        await channel.purge(limit=amount, bulk=True)
 
 class Birthday:
     def __init__(self, guild, channel, user, date):
