@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime, time, timedelta
 import json
+import re
 from threading import Timer
 import discord
 import mysql.connector
@@ -81,7 +82,7 @@ class BirthdayUtils:
 
                 # Send a birthday message to each user whose birthday it is
                 for result in results:
-                    user = await self.client.fetch_user(result[0])
+                    user = await self.get_user(result[0])
                     if user:
                         # Check if it's the user's birthday
                         birthday_date = result[1].date()
@@ -97,7 +98,9 @@ class BirthdayUtils:
             sleep_seconds = (next_check - now).total_seconds()
             await asyncio.sleep(sleep_seconds)
 
-
+    async def get_user(self, user_id):
+        user_id = int(re.search(r'\d+', user_id).group())
+        return await self.client.fetch_user(user_id)
 
 class Birthday:
     def __init__(self, guild, channel, user, date):

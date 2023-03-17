@@ -23,7 +23,7 @@ class Conversion:
             await interaction.followup.send("Invalid Currency-Code!\nTo get a list of valid codes do: /currencies")
 
     async def get_currencies(self, interaction: discord.Interaction):
-        interaction.response.defer()
+        await interaction.response.defer()
         currencies = self.client.currencies()
         codes = list(currencies.keys())
         await interaction.followup.send(f"Here is a list of valid currency-codes:\n{codes}")

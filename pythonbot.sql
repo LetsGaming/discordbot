@@ -43,6 +43,7 @@ CREATE TABLE `members` (
   `guild_id` bigint(25) NOT NULL,
   `discord_id` varchar(50) NOT NULL,
   `team_id` int(11) NOT NULL,
+  `leader` tinyint(4) NOT NULL,
   `project_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -159,11 +160,14 @@ CREATE TABLE `tickets` (
   `project_id` int(11) NOT NULL,
   `team_id` int(11) NOT NULL,
   `member_id` int(11) NOT NULL,
+  `ticket_author` varchar(50),
+  `ticket_author_icon` varchar(255),
   `ticket_title` varchar(50) NOT NULL,
   `ticket_description` varchar(255) NOT NULL,
   `deadline` date NOT NULL,
   `resolved` tinyint(4) NOT NULL,
-  `resolve_date` date DEFAULT NULL
+  `resolve_date` date DEFAULT NULL,
+  `creation_date` date
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
