@@ -56,7 +56,8 @@ class TicketStatistics:
         unresolved_tickets = len([ticket for ticket in tickets if not ticket[10]])
 
         cursor.execute("SELECT * FROM tickets WHERE resolve_date > deadline;")
-        tickets_within_deadline = len(result=cursor.fetchall())
+        result=cursor.fetchall()
+        tickets_within_deadline = len(result)
 
         stat_dict = {
             'top_author': most_common_author,
