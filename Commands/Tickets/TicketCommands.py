@@ -326,8 +326,9 @@ class TicketSystem:
         tickets = cursor.fetchall()
         tickets_dict = {}
         for index, ticket in enumerate(tickets):
-            cursor.execute("SELECT discord_id from members where id = %s", (ticket[4]))
+            cursor.execute("SELECT discord_id from members where id = %s", (ticket[4],))
             ticket_discord_id = cursor.fetchone()
+            ticket_for_user = self.utils.get_user(ticket_discord_id)
             ticket_id = ticket[0]
             ticket_author = ticket[5]
             author_icon = ticket[6]
@@ -338,7 +339,7 @@ class TicketSystem:
             ticket_resolved_date = ticket[11]
             tickets_dict[index] = {
                 "ticket_id": ticket_id,
-                "ticket_for": ticket_discord_id,
+                "ticket_for": ticket_for_user.nick,
                 "author_icon": author_icon,
                 "ticket_author": ticket_author,
                 "ticket_title": ticket_title,
@@ -404,8 +405,9 @@ class TicketSystem:
         tickets = cursor.fetchall()
         tickets_dict = {}
         for index, ticket in enumerate(tickets):
-            cursor.execute("SELECT discord_id from members where id = %s", (ticket[4]))
+            cursor.execute("SELECT discord_id from members where id = %s", (ticket[4],))
             ticket_discord_id = cursor.fetchone()
+            ticket_for_user = self.utils.get_user(ticket_discord_id)
             ticket_id = ticket[0]
             ticket_author = ticket[5]
             author_icon = ticket[6]
@@ -416,7 +418,7 @@ class TicketSystem:
             ticket_resolved_date = ticket[11]
             tickets_dict[index] = {
                 "ticket_id": ticket_id,
-                "ticket_for": ticket_discord_id,
+                "ticket_for": ticket_for_user.nick,
                 "author_icon": author_icon,
                 "ticket_author": ticket_author,
                 "ticket_title": ticket_title,
