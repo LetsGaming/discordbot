@@ -73,7 +73,7 @@ class BirthdayUtils:
             # Check if it's 6 in the morning
             if now.hour == 6 and now.minute == 0:
                 # Get today's date
-                today = now.date()
+                today = datetime.date.today()
 
                 # Query the database for birthdays that match today's date
                 cursor = self.connection.cursor()
