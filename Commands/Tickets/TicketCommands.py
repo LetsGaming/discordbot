@@ -327,8 +327,8 @@ class TicketSystem:
         tickets_dict = {}
         for index, ticket in enumerate(tickets):
             cursor.execute("SELECT discord_id from members where id = %s", (ticket[4],))
-            ticket_discord_id = cursor.fetchone()
-            ticket_for_user = await self.utils.get_user(ticket_discord_id)
+            ticket_discord_id = cursor.fetchone()[0]
+            ticket_for_user = await self.utils.get_member(guild=guild,userId=ticket_discord_id)
             ticket_id = ticket[0]
             ticket_author = ticket[5]
             author_icon = ticket[6]
@@ -406,8 +406,8 @@ class TicketSystem:
         tickets_dict = {}
         for index, ticket in enumerate(tickets):
             cursor.execute("SELECT discord_id from members where id = %s", (ticket[4],))
-            ticket_discord_id = cursor.fetchone()
-            ticket_for_user = await self.utils.get_user(ticket_discord_id)
+            ticket_discord_id = cursor.fetchone()[0]
+            ticket_for_user = await self.utils.get_member(guild=guild,userId=ticket_discord_id)
             ticket_id = ticket[0]
             ticket_author = ticket[5]
             author_icon = ticket[6]
