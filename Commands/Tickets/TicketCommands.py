@@ -326,7 +326,7 @@ class TicketSystem:
         tickets = cursor.fetchall()
         tickets_dict = {}
         for index, ticket in enumerate(tickets):
-            cursor.execute("SELECT discord_id from members where if = %s", (ticket[5]))
+            cursor.execute("SELECT discord_id from members where id = %s", (ticket[4]))
             ticket_discord_id = cursor.fetchone()
             ticket_id = ticket[0]
             ticket_author = ticket[5]
@@ -404,7 +404,7 @@ class TicketSystem:
         tickets = cursor.fetchall()
         tickets_dict = {}
         for index, ticket in enumerate(tickets):
-            cursor.execute("SELECT discord_id from members where if = %s", (ticket[5]))
+            cursor.execute("SELECT discord_id from members where id = %s", (ticket[4]))
             ticket_discord_id = cursor.fetchone()
             ticket_id = ticket[0]
             ticket_author = ticket[5]
