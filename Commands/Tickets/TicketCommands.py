@@ -258,6 +258,7 @@ class TicketSystem:
             ticket_resolved_date = ticket[11]
             tickets_dict[index] = {
                 "ticket_id": ticket_id,
+                "ticket_for": interaction_user.nick,
                 "author_icon": author_icon,
                 "ticket_author": ticket_author,
                 "ticket_title": ticket_title,
@@ -325,6 +326,8 @@ class TicketSystem:
         tickets = cursor.fetchall()
         tickets_dict = {}
         for index, ticket in enumerate(tickets):
+            cursor.execute("SELECT discord_id from members where if = %s", (ticket[5]))
+            ticket_discord_id = cursor.fetchone()
             ticket_id = ticket[0]
             ticket_author = ticket[5]
             author_icon = ticket[6]
@@ -335,6 +338,7 @@ class TicketSystem:
             ticket_resolved_date = ticket[11]
             tickets_dict[index] = {
                 "ticket_id": ticket_id,
+                "ticket_for": ticket_discord_id,
                 "author_icon": author_icon,
                 "ticket_author": ticket_author,
                 "ticket_title": ticket_title,
@@ -384,7 +388,7 @@ class TicketSystem:
         
         #Check if user is leader
         discord_id = f"<@{interaction.user.id}>"
-        cursor.execute("SELECT team_id, member_id, leader FROM members WHERE discord_id = %s AND project_id = %s", (discord_id, project_id))
+        cursor.execute("SELECT team_id, id, leader FROM members WHERE discord_id = %s AND project_id = %s", (discord_id, project_id))
         result = cursor.fetchone()
         members_team_id = result[0]
         member_id = result[1]
@@ -400,6 +404,8 @@ class TicketSystem:
         tickets = cursor.fetchall()
         tickets_dict = {}
         for index, ticket in enumerate(tickets):
+            cursor.execute("SELECT discord_id from members where if = %s", (ticket[5]))
+            ticket_discord_id = cursor.fetchone()
             ticket_id = ticket[0]
             ticket_author = ticket[5]
             author_icon = ticket[6]
@@ -410,6 +416,7 @@ class TicketSystem:
             ticket_resolved_date = ticket[11]
             tickets_dict[index] = {
                 "ticket_id": ticket_id,
+                "ticket_for": ticket_discord_id,
                 "author_icon": author_icon,
                 "ticket_author": ticket_author,
                 "ticket_title": ticket_title,
