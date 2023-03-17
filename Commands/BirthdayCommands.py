@@ -77,18 +77,18 @@ class BirthdayUtils:
 
                 # Query the database for birthdays that match today's date
                 cursor = self.connection.cursor()
-                cursor.execute("SELECT discord_id, date FROM birthdays WHERE DATE_FORMAT(date, '%m-%d') = %s", (today.strftime('%m-%d'),))
+                cursor.execute("SELECT discord_id, date, guild_id FROM birthdays WHERE DATE_FORMAT(date, '%m-%d') = %s", (today.strftime('%m-%d'),))
                 results = cursor.fetchall()
 
                 # Send a birthday message to each user whose birthday it is
                 for result in results:
                     user = await self.get_user(result[0])
+                    guild = await self.client.fetch_guild(result[3])
                     if user:
                         # Check if it's the user's birthday
                         birthday_date = result[1].date()
                         if birthday_date == today:
                             # Get the celebrate birthday channel for the user's guild
-                            guild = user.guild
                             celebrate_channel = discord.utils.get(guild.text_channels, name='celebrate-birthday')
                             if celebrate_channel:
                                 await celebrate_channel.send(f"Happy birthday, {user.mention}!")
@@ -101,6 +101,7 @@ class BirthdayUtils:
     async def get_user(self, user_id):
         user_id = int(re.search(r'\d+', user_id).group())
         return await self.client.fetch_user(user_id)
+
 
 class Birthday:
     def __init__(self, guild, channel, user, date):
