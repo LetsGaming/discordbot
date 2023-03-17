@@ -518,8 +518,24 @@ class TicketSystem:
                 if not member_name.startswith("<"):
                     await interaction.followup.send(f"'{member_name}' is not a valid form. Please use @username!")
                     continue
+
+                await interaction.followup.send("Is this member a Teamleader? (y/n)")
+                try:
+                    leader_choice_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
+                except asyncio.TimeoutError:
+                    await interaction.followup.send("Member addition timed out.")
+                    return
+                leader_choice = leader_choice_msg.content.lower()
+                if leader_choice == "n":
+                    leader = 0
+                elif leader_choice == "y":
+                    leader = 1
+                elif leader_choice != "y":
+                    await interaction.followup.send("Invalid input. Please enter 'y' or 'n'.")
+                    continue
+
                 # Add the member to the team
-                self.add_member(interaction=interaction,discord_id=member_name, team_id=team_id, project_id=project_id)
+                self.add_member(interaction=interaction,discord_id=member_name, team_id=team_id, project_id=project_id, leader=leader)
         
         await interaction.channel.send(f"Project '{project_name}' successfully created.")
 
@@ -634,7 +650,7 @@ class TicketSystem:
         leader_options_text = ""
         for option in leader_options:
             leader_options_text += "**{}** - {}\n".format(option.value, option.name)
-        await interaction.followup.send(f"Please select a value:\n{leader_options_text}")     
+        await interaction.followup.send(f"Please select if member is leader or not:\n{leader_options_text}")     
         try:
             leader_choice_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
         except asyncio.TimeoutError:
@@ -646,16 +662,13 @@ class TicketSystem:
             await interaction.followup.send("Invalid Value. Please try again")
             return
 
-        query = "INSERT INTO members (id, guild_id, discord_id, team_id, project_id, leader) VALUES (null, %s, %s, %s, %s, %s);"
-        values = (interaction.guild.id, discord_id, team_id, project_id, leader_value)
-        cursor.execute(query, values)
-        self.connection.commit()
+        self.add_member(interaction=interaction, discord_id=discord_id, team_id=team_id, project_id=project_id, leader=leader_value)
 
         await interaction.channel.send(f"Added member {discord_id} to team ' {team_id} ' in project ' {project_id} '.")
 
-    def add_member(self, interaction: discord.Interaction, discord_id, team_id, project_id):
+    def add_member(self, interaction: discord.Interaction, discord_id, team_id, project_id, leader):
             cursor = self.connection.cursor()
-            cursor.execute(("INSERT INTO members (id, guild_id, discord_id, team_id, project_id) VALUES (null, %s, %s, %s, %s)"), (interaction.guild.id, discord_id, team_id, project_id))
+            cursor.execute(("INSERT INTO members (id, guild_id, discord_id, team_id, project_id, leader) VALUES (null, %s, %s, %s, %s, %s)"), (interaction.guild.id, discord_id, team_id, project_id, leader))
             self.connection.commit()
 
     def create_team(self, interaction: discord.Interaction, name: str, description: str, project_id: int) -> int:
