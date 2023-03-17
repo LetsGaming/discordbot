@@ -40,8 +40,8 @@ class TicketSystem:
 
     async def register_commands(self):
         self.tree.command(name="create_ticket", description="Creates a ticket for a project/team/member")(self.create_ticket)
-        self.tree.command(name="get_tickets", description="Gets your open tickets for a project (Note: Set get_resolved = True, to get all tickets)")(self.get_ticket)
-        self.tree.command(name="get_tickets_week", description="Gets the tickets created for you in the past week. If you're the teamleader it returns all tickets of your team")(self.get_tickets_past_week)
+        self.tree.command(name="get_tickets", description="Retrieve your open project tickets. To get resolved tickets, set get_resolved = True.")(self.get_ticket)
+        self.tree.command(name="get_tickets_week", description="Retrieve your tickets created in past week. Leaders get all team tickets.")(self.get_tickets_past_week)
         self.tree.command(name="get_tickets_team", description="Gets all tickets of your team, if you're the leader!")(self.get_tickets_by_team)
         self.tree.command(name="resolve_ticket", description="Lets you resolve one of your tickets")(self.resolve_ticket)
         self.tree.command(name="create_project", description="Create a new Project with Teams/Members")(self.create_project)
