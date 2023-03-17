@@ -1,7 +1,5 @@
-from threading import Timer
 import discord
 from discord import app_commands
-import mysql.connector
 
 from Commands.Tickets.TicketAnalytics import TicketStatistics
 from Commands.Tickets.TicketCommands import TicketCommands
@@ -11,15 +9,6 @@ class TicketSystemHandler:
     def __init__(self, tree: app_commands.CommandTree, client: discord.Client):
         self.tree = tree
         self.client = client
-        self.config = self.load_config()
-        self.connection = mysql.connector.connect(
-            host= self.config["host"],
-            user= self.config["username"],
-            password= self.config["password"],
-            database="pythonbot"
-        )
-        self.ping_timer = Timer(1000, self.__restart_connection) 
-        self.ping_timer.start()
         
         self.ticketCommands = TicketCommands(client=self.client)
         self.ticketProjectCommands = TicketProjectCommands()
