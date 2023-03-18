@@ -256,9 +256,9 @@ class TicketCommands:
         await channel.send("Getting your tickets...")
         await self.utils.send_tickets_embeds(channel=channel, interaction_user=interaction_user, tickets_dict=tickets_dict)
 
-    async def get_tickets_by_team(self, interaction: discord.Interaction, get_all: Optional[bool] = False, get_resolved: Optional[bool] = False):
+    async def get_tickets_by_team(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        
+
         channel = await self.utils.create_sub_channel(interaction=interaction)
         await interaction.followup.send(f"Your interaction continues in <#{channel.id}>", ephemeral=True)
         await channel.send(f"Welcome {interaction.user.mention}! This is your ticket channel.")
@@ -267,55 +267,48 @@ class TicketCommands:
         guild = interaction.guild
         interaction_user = interaction.user
 
-        await channel.send("Getting the tickets...")
         cursor = self.connection.cursor()
-        cursor.execute("SELECT p.id, p.name, m.team_id, m.leader FROM projects p JOIN members m ON p.id = m.project_id WHERE p.guild_id = %s AND m.discord_id = %s", (guild.id, interaction.user.id))
+        cursor.execute("SELECT p.id, p.name, m.team_id, m.leader FROM projects p JOIN members m ON p.id = m.project_id WHERE p.guild_id = %s AND m.discord_id = %s", (guild.id, interaction_user.id))
         project_row = cursor.fetchone()
         if not project_row:
             await channel.send("You're not a member of any project!")
             await self.utils.delete_sub_channel(channel=channel)
             return
+        project_id, project_name, members_team_id, leader = project_row
 
-        project_id, project_name, team_id, is_leader = project_row
+        # Ask for the project
+        await channel.send(f"You are a member of the {project_name} project. Retrieving tickets for your team.")
+        
+        query = "SELECT * FROM tickets WHERE project_id = %s AND team_id = %s AND creation_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 WEEK) AND NOW()"
+        values = (project_id, members_team_id)
+        if leader:
+            query = "SELECT * FROM tickets WHERE project_id = %s AND team_id = %s and creation_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 WEEK) AND NOW()"
+            values = (project_id,)
 
-        if not is_leader:
-            await channel.send("You're not the leader of your team!")
-            await self.utils.delete_sub_channel(channel=channel)
-            return
-
-        query = "SELECT t.*, m.discord_id FROM tickets t JOIN members m ON t.team_id = m.team_id AND t.project_id = m.project_id WHERE t.project_id = %s AND t.team_id = %s"
-        if not get_all:
-            query += " AND t.resolved = %s"
-            resolved_value = 1 if get_resolved else 0
-            query_params = (project_id, team_id, resolved_value)
-        else:
-            query_params = (project_id, team_id)
-
-        cursor.execute(query, query_params)
-        tickets_rows = cursor.fetchall()
-
+        cursor.execute(query, values)
+        tickets = cursor.fetchall()
         tickets_dict = {}
-        for ticket_row in tickets_rows:
-            ticket_id, team_id, project_id, member_id, discord_id, author, author_icon, title, description, deadline, resolved, resolved_date = ticket_row
-            ticket_for_user = await self.utils.get_member(guild=guild, userId=discord_id)
-            tickets_dict[ticket_id] = {
+        for index, ticket in enumerate(tickets):
+            cursor.execute("SELECT discord_id from members where id = %s", (ticket[4],))
+            ticket_discord_id = cursor.fetchone()[0]
+            ticket_for_user = await self.utils.get_member(guild=guild, userId=ticket_discord_id)
+            ticket_id, _, _, _, _, ticket_author, author_icon, ticket_title, ticket_description, ticket_deadline, ticket_resolved, ticket_resolved_date = ticket
+            tickets_dict[index] = {
                 "ticket_id": ticket_id,
                 "ticket_for": ticket_for_user.nick,
                 "author_icon": author_icon,
-                "ticket_author": author,
-                "ticket_title": title,
-                "ticket_description": description,
-                "ticket_deadline": deadline,
-                "ticket_resolved": resolved,
-                "ticket_resolved_date": resolved_date
+                "ticket_author": ticket_author,
+                "ticket_title": ticket_title,
+                "ticket_description": ticket_description,
+                "ticket_deadline": ticket_deadline,
+                "ticket_resolved": ticket_resolved,
+                "ticket_resolved_date": ticket_resolved_date,
             }
 
         if not tickets_dict:
-            await channel.send("No tickets found!")
-            await self.utils.delete_sub_channel(channel=channel)
-            return
-
-        await self.utils.send_tickets_embeds(channel=channel, interaction_user=interaction_user, tickets_dict=tickets_dict)
+            await channel.send("There are no tickets for your team.")
+        else:
+            await self.utils.send_tickets_embed(channel=channel, tickets_dict=tickets_dict)
 
     async def get_tickets_past_week(self, interaction: discord.Interaction):
         await interaction.response.defer()
