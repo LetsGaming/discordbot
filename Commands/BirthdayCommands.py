@@ -40,7 +40,7 @@ class BirthdayUtils:
 
         discord_id = f"<@{user.id}>"
         cursor = self.connection.cursor()
-        cursor.execute("SELECT id, date FROM birthdays WHERE discord_id = %s", (discord_id,))
+        cursor.execute("SELECT id, date FROM birthdays WHERE discord_id = %s AND guild_id = %s", (discord_id, guild.id))
         result = cursor.fetchone()
 
         if result is not None:
@@ -57,7 +57,7 @@ class BirthdayUtils:
         await interaction.response.defer()
         cursor = self.connection.cursor()
         if username.startswith("<"):
-            cursor.execute("Select date from birthdays where discord_id = %s", (username,))
+            cursor.execute("Select date from birthdays where discord_id = %s and guild_id = %s", (username, interaction.guild.id))
             result = cursor.fetchone()
             if result is not None:
                 await interaction.followup.send(f"{interaction.user.mention} their birthday is: {result[0].strftime('%d.%m.%Y')} !")
