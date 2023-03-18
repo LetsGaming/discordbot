@@ -267,23 +267,41 @@ class TicketCommands:
         guild = interaction.guild
         interaction_user = interaction.user
 
+        # Ask for the project
         cursor = self.connection.cursor()
-        cursor.execute("SELECT p.id, p.name, m.team_id, m.leader FROM projects p JOIN members m ON p.id = m.project_id WHERE p.guild_id = %s AND m.discord_id = %s", (guild.id, interaction_user.id))
-        project_row = cursor.fetchone()
-        if not project_row:
-            await channel.send("You're not a member of any project!")
+        cursor.execute("SELECT id, name FROM projects WHERE guild_id = %s", (guild.id,))
+        projects = cursor.fetchall()
+        project_options = [app_commands.Choice(name=project[1], value=str(project[0])) for project in projects]
+        project_options_text = "\n".join(f"**{option.value}** - {option.name}" for option in project_options)
+        await channel.send(f"For what project do you want to get the tickets?:\n{project_options_text}")
+        try:
+            project_choice_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction_user, timeout=60)
+        except asyncio.TimeoutError:
+            await channel.send("Ticket getting timed out.")
             await self.utils.delete_sub_channel(channel=channel)
             return
-        project_id, project_name, members_team_id, leader = project_row
+        project_id = project_choice_msg.content
+        valid_project_ids = [option.value for option in project_options]
+        if project_id not in valid_project_ids:
+            await channel.send("Invalid Project-ID. Please try again")
+            await self.utils.delete_sub_channel(channel=channel)
+            return
 
-        # Ask for the project
-        await channel.send(f"You are a member of the {project_name} project. Retrieving tickets for your team.")
-        
-        query = "SELECT * FROM tickets WHERE project_id = %s AND team_id = %s AND creation_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 WEEK) AND NOW()"
-        values = (project_id, members_team_id)
+        # Check if user is leader
+        discord_id = f"<@{interaction.user.id}>"
+        cursor.execute("SELECT team_id, id, leader FROM members WHERE discord_id = %s AND project_id = %s", (discord_id, project_id))
+        result = cursor.fetchone()
+        if not result:
+            await channel.send("You are not a member of this project.")
+            await self.utils.delete_sub_channel(channel=channel)
+            return
+        members_team_id, member_id, leader = result
+
+        query = "SELECT * FROM tickets WHERE project_id = %s AND team_id = %s AND member_id = %s"
+        values = (project_id, members_team_id, member_id)
         if leader:
-            query = "SELECT * FROM tickets WHERE project_id = %s AND team_id = %s and creation_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 WEEK) AND NOW()"
-            values = (project_id,)
+            query = "SELECT * FROM tickets WHERE project_id = %s AND team_id = %s"
+            values = (project_id, members_team_id)
 
         cursor.execute(query, values)
         tickets = cursor.fetchall()
@@ -302,7 +320,7 @@ class TicketCommands:
                 "ticket_description": ticket_description,
                 "ticket_deadline": ticket_deadline,
                 "ticket_resolved": ticket_resolved,
-                "ticket_resolved_date": ticket_resolved_date,
+                "ticket_resolved_date": ticket_resolved_date
             }
 
         if not tickets_dict:
