@@ -256,109 +256,87 @@ class TicketCommands:
         await channel.send("Getting your tickets...")
         await self.utils.send_tickets_embeds(channel=channel, interaction_user=interaction_user, tickets_dict=tickets_dict)
 
-    async def get_tickets_by_team(self, interaction: discord.Interaction, get_all: Optional[bool]=False, get_resolved: Optional[bool]=False):
+    async def get_tickets_by_team(self, interaction: discord.Interaction, get_all: Optional[bool] = False, get_resolved: Optional[bool] = False):
         await interaction.response.defer()
         
         channel = await self.utils.create_sub_channel(interaction=interaction)
         await interaction.followup.send(f"Your interaction continues in <#{channel.id}>", ephemeral=True)
         await channel.send(f"Welcome {interaction.user.mention}! This is your ticket channel.")
-        await self.utils.delete_command_messages(channel=interaction.channel,amount=2)
-        
+        await self.utils.delete_command_messages(channel=interaction.channel, amount=2)
+
         guild = interaction.guild
         interaction_user = interaction.user
-        
-        cursor = self.connection.cursor()
-        cursor.execute("SELECT * FROM projects WHERE guild_id = %s", (guild.id,))
-        projects = cursor.fetchall()
-        project_options = []
-        for project in projects:
-            project_options.append(app_commands.Choice(name=project[2], value=str(project[0])))
 
-        # Ask for the project
-        project_options_text = ""
-        for option in project_options:
-            project_options_text += "**{}** - {}\n".format(option.value, option.name)
-        await channel.send(f"For what project do you want to get the tickets?:\n{project_options_text}")
-        try:
-            project_choice_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction_user, timeout=60)
-        except asyncio.TimeoutError:
-            await channel.send("Ticket getting timed out.")
+        await channel.send("Getting the tickets...")
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT p.id, p.name, m.team_id, m.leader FROM projects p JOIN members m ON p.id = m.project_id WHERE p.guild_id = %s AND m.discord_id = %s", (guild.id, interaction.user.id))
+        project_row = cursor.fetchone()
+        if not project_row:
+            await channel.send("You're not a member of any project!")
             await self.utils.delete_sub_channel(channel=channel)
             return
-        project_id = project_choice_msg.content
-        valid_project_ids = [option.value for option in project_options]
-        if project_id not in valid_project_ids:
-            await channel.send("Invalid Project-ID. Please try again")
-            await self.utils.delete_sub_channel(channel=channel)
-            return
-        
-        #Check if user is leader
-        discord_id = f"<@{interaction.user.id}>"
-        cursor.execute("SELECT team_id, leader FROM members WHERE discord_id = %s AND project_id = %s", (discord_id, project_id))
-        result = cursor.fetchone()
-        members_team_id = result[0]
-        leader = result[1]
-        
-        if not leader:
+
+        project_id, project_name, team_id, is_leader = project_row
+
+        if not is_leader:
             await channel.send("You're not the leader of your team!")
+            await self.utils.delete_sub_channel(channel=channel)
             return
-        
-        query = "SELECT * FROM tickets WHERE project_id = %s AND team_id = %s AND resolved = 0"
-        if get_resolved:
-            query = "SELECT * FROM tickets WHERE project_id = %s AND team_id = %s AND resolved = 1"
-        if get_all:
-            query = "SELECT * FROM tickets WHERE project_id = %s AND team_id = %s"
-        cursor.execute(query, (project_id, members_team_id))
-        tickets = cursor.fetchall()
+
+        query = "SELECT t.*, m.discord_id FROM tickets t JOIN members m ON t.team_id = m.team_id AND t.project_id = m.project_id WHERE t.project_id = %s AND t.team_id = %s"
+        if not get_all:
+            query += " AND t.resolved = %s"
+            resolved_value = 1 if get_resolved else 0
+            query_params = (project_id, team_id, resolved_value)
+        else:
+            query_params = (project_id, team_id)
+
+        cursor.execute(query, query_params)
+        tickets_rows = cursor.fetchall()
+
         tickets_dict = {}
-        for index, ticket in enumerate(tickets):
-            cursor.execute("SELECT discord_id from members where id = %s", (ticket[4],))
-            ticket_discord_id = cursor.fetchone()[0]
-            ticket_for_user = await self.utils.get_member(guild=guild,userId=ticket_discord_id)
-            ticket_id = ticket[0]
-            ticket_author = ticket[5]
-            author_icon = ticket[6]
-            ticket_title = ticket[7]
-            ticket_description = ticket[8]
-            ticket_deadline = ticket[9]
-            ticket_resolved = ticket[10]
-            ticket_resolved_date = ticket[11]
-            tickets_dict[index] = {
+        for ticket_row in tickets_rows:
+            ticket_id, team_id, project_id, member_id, discord_id, author, author_icon, title, description, deadline, resolved, resolved_date = ticket_row
+            ticket_for_user = await self.utils.get_member(guild=guild, userId=discord_id)
+            tickets_dict[ticket_id] = {
                 "ticket_id": ticket_id,
                 "ticket_for": ticket_for_user.nick,
                 "author_icon": author_icon,
-                "ticket_author": ticket_author,
-                "ticket_title": ticket_title,
-                "ticket_description": ticket_description,
-                "ticket_deadline": ticket_deadline,
-                "ticket_resolved": ticket_resolved,
-                "ticket_resolved_date": ticket_resolved_date
+                "ticket_author": author,
+                "ticket_title": title,
+                "ticket_description": description,
+                "ticket_deadline": deadline,
+                "ticket_resolved": resolved,
+                "ticket_resolved_date": resolved_date
             }
-        await channel.send("Getting the tickets...")
+
+        if not tickets_dict:
+            await channel.send("No tickets found!")
+            await self.utils.delete_sub_channel(channel=channel)
+            return
+
         await self.utils.send_tickets_embeds(channel=channel, interaction_user=interaction_user, tickets_dict=tickets_dict)
 
     async def get_tickets_past_week(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        
+
         channel = await self.utils.create_sub_channel(interaction=interaction)
         await interaction.followup.send(f"Your interaction continues in <#{channel.id}>", ephemeral=True)
         await channel.send(f"Welcome {interaction.user.mention}! This is your ticket channel.")
-        await self.utils.delete_command_messages(channel=interaction.channel,amount=2)
-        
+        await self.utils.delete_command_messages(channel=interaction.channel, amount=2)
+
         guild = interaction.guild
         interaction_user = interaction.user
-        
+
+        await channel.send("Getting the tickets...")
+
         cursor = self.connection.cursor()
-        cursor.execute("SELECT * FROM projects WHERE guild_id = %s", (guild.id,))
+        cursor.execute("SELECT id, name FROM projects WHERE guild_id = %s", (guild.id,))
         projects = cursor.fetchall()
-        project_options = []
-        for project in projects:
-            project_options.append(app_commands.Choice(name=project[2], value=str(project[0])))
+        project_options = [app_commands.Choice(name=project[1], value=str(project[0])) for project in projects]
 
         # Ask for the project
-        project_options_text = ""
-        for option in project_options:
-            project_options_text += "**{}** - {}\n".format(option.value, option.name)
+        project_options_text = "\n".join(f"**{option.value}** - {option.name}" for option in project_options)
         await channel.send(f"For what project do you want to get the tickets?:\n{project_options_text}")
         try:
             project_choice_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction_user, timeout=60)
@@ -372,15 +350,17 @@ class TicketCommands:
             await channel.send("Invalid Project-ID. Please try again")
             await self.utils.delete_sub_channel(channel=channel)
             return
-        
-        #Check if user is leader
+
+        # Check if user is leader
         discord_id = f"<@{interaction.user.id}>"
         cursor.execute("SELECT team_id, id, leader FROM members WHERE discord_id = %s AND project_id = %s", (discord_id, project_id))
         result = cursor.fetchone()
-        members_team_id = result[0]
-        member_id = result[1]
-        leader = result[2]
-        
+        if not result:
+            await channel.send("You are not a member of this project.")
+            await self.utils.delete_sub_channel(channel=channel)
+            return
+        members_team_id, member_id, leader = result
+
         query = "SELECT * FROM tickets WHERE project_id = %s AND team_id = %s AND member_id = %s and creation_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 WEEK) AND NOW()"
         values = (project_id, members_team_id, member_id)
         if leader:
@@ -393,15 +373,8 @@ class TicketCommands:
         for index, ticket in enumerate(tickets):
             cursor.execute("SELECT discord_id from members where id = %s", (ticket[4],))
             ticket_discord_id = cursor.fetchone()[0]
-            ticket_for_user = await self.utils.get_member(guild=guild,userId=ticket_discord_id)
-            ticket_id = ticket[0]
-            ticket_author = ticket[5]
-            author_icon = ticket[6]
-            ticket_title = ticket[7]
-            ticket_description = ticket[8]
-            ticket_deadline = ticket[9]
-            ticket_resolved = ticket[10]
-            ticket_resolved_date = ticket[11]
+            ticket_for_user = await self.utils.get_member(guild=guild, userId=ticket_discord_id)
+            ticket_id, _, _, _, _, ticket_author, author_icon, ticket_title, ticket_description, ticket_deadline, ticket_resolved, ticket_resolved_date = ticket
             tickets_dict[index] = {
                 "ticket_id": ticket_id,
                 "ticket_for": ticket_for_user.nick,
@@ -413,7 +386,6 @@ class TicketCommands:
                 "ticket_resolved": ticket_resolved,
                 "ticket_resolved_date": ticket_resolved_date
             }
-        await channel.send("Getting the tickets...")
         await self.utils.send_tickets_embeds(channel=channel, interaction_user=interaction_user, tickets_dict=tickets_dict)
         
     async def resolve_ticket(self, interaction: discord.Interaction, ticket_id: int):
