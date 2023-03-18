@@ -24,7 +24,7 @@ class BirthdayUtils:
 
     def __restart_connection(self):
         if not self.connection.is_connected:
-            self.connection.reconnect(attempts=5)
+            self.connection.connect()
         self.ping_timer = Timer(1000, self.__restart_connection) 
         self.ping_timer.start()
         
@@ -63,7 +63,7 @@ class BirthdayUtils:
             if result is not None:
                 await interaction.followup.send(f"{interaction.user.mention} {birthday_user.name}'s birthday is: {result[0].strftime('%d.%m.%Y')} !")
             else:
-                await interaction.followup.send(f"{interaction.user.mention} it seems like they haven't added their birthday yet.")
+                await interaction.followup.send(f"{interaction.user.mention} it seems like {birthday_user.name} hasn't added their birthday yet.")
         else:
             await interaction.channel.send("Invalid form please use @username !")
     

@@ -19,7 +19,7 @@ class TicketStatistics:
         
     def __restart_connection(self):
         if not self.connection.is_connected:
-            self.connection.reconnect(attempts=5)
+            self.connection.connect()
         self.ping_timer = Timer(1000, self.__restart_connection) 
         self.ping_timer.start() 
         
