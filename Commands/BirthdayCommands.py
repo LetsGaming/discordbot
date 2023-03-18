@@ -57,10 +57,11 @@ class BirthdayUtils:
         await interaction.response.defer()
         cursor = self.connection.cursor()
         if username.startswith("<"):
+            birthday_user = await self.get_user(user_id=username)
             cursor.execute("Select date from birthdays where discord_id = %s and guild_id = %s", (username, interaction.guild.id))
             result = cursor.fetchone()
             if result is not None:
-                await interaction.followup.send(f"{interaction.user.mention} their birthday is: {result[0].strftime('%d.%m.%Y')} !")
+                await interaction.followup.send(f"{interaction.user.mention} {birthday_user.name}'s birthday is: {result[0].strftime('%d.%m.%Y')} !")
             else:
                 await interaction.followup.send(f"{interaction.user.mention} it seems like they haven't added their birthday yet.")
         else:

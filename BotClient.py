@@ -50,6 +50,5 @@ class BotClient(discord.Client):
             birthday = Birthday(guild=message.channel.guild, channel=message.channel, user=message.author, date=birthday_date)
             await self.birthdayUtils.add_birthday(birthday=birthday)
 
-        
 _client = BotClient()
 _client.run(_client.token)
