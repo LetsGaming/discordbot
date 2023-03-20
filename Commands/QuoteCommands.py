@@ -18,15 +18,14 @@ class Quote:
             database="pythonbot"
         )
         self.client = client
-        self.ping_timer = Timer(1000, self.__restart_connection) 
+        self.ping_timer = Timer(28500, self.__restart_connection) 
         self.ping_timer.start() 
 
         self.lastResult = None
         
     def __restart_connection(self):
-        if not self.connection.is_connected:
-            self.connection.connect()
-        self.ping_timer = Timer(1000, self.__restart_connection) 
+        self.connection.connect()
+        self.ping_timer = Timer(28500, self.__restart_connection) 
         self.ping_timer.start()
         
     def load_config(self):

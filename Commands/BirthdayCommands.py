@@ -16,16 +16,15 @@ class BirthdayUtils:
             password= self.config["password"],
             database="pythonbot"
         )
-        self.ping_timer = Timer(1000, self.__restart_connection) 
+        self.ping_timer = Timer(28500, self.__restart_connection) 
         self.ping_timer.start() 
         
         self.loop = asyncio.get_event_loop()
         self.loop.create_task(self.check_birthdays())
 
     def __restart_connection(self):
-        if not self.connection.is_connected:
-            self.connection.connect()
-        self.ping_timer = Timer(1000, self.__restart_connection) 
+        self.connection.connect()
+        self.ping_timer = Timer(28500, self.__restart_connection) 
         self.ping_timer.start()
         
     def load_config(self):
