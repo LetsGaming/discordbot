@@ -348,11 +348,11 @@ class TicketCommands:
         interaction_user = interaction.user
         
         cursor = self.connection.cursor()
-        cursor.execute("SELECT * FROM projects WHERE guild_id = %s", (guild.id,))
+        cursor.execute("SELECT id, name FROM projects WHERE guild_id = %s", (guild.id,))
         projects = cursor.fetchall()
         project_options = []
         for project in projects:
-            project_options.append(app_commands.Choice(name=project[2], value=str(project[0])))
+            project_options.append(app_commands.Choice(name=project[1], value=str(project[0])))
 
         # Ask for the project
         project_options_text = ""
@@ -434,7 +434,71 @@ class TicketCommands:
         else:
             await interaction.followup.send(f"This Ticket does not belong to you, you can't resolve it!")
             return
-         
+        
+    async def assign_ticket_to(self, interaction: discord.Interaction, ticket_id: int):
+        await interaction.response.defer()
+        await interaction.channel.send("Assigning ticket to another user...")
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT project_id FROM tickets WHERE id = %s", (ticket_id,))
+        project_id = cursor.fetchone()[0]
+
+        # Get the available teams from the database
+        cursor.execute("SELECT * FROM teams WHERE project_id = %s", (project_id,))
+        teams = cursor.fetchall()
+        team_options = []
+        for team in teams:
+            team_options.append(app_commands.Choice(name=team[2], value=str(team[0])))
+
+        # Ask for the team
+        team_options_text = ""
+        for option in  team_options:
+            team_options_text += "**{}** - {}\n".format(option.value, option.name)
+        await interaction.channel.send(f"Please select a team:\n{team_options_text}")
+        try:
+            team_choice_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
+        except asyncio.TimeoutError:
+            await interaction.channel.send("Ticket creation timed out.")
+            await self.utils.delete_sub_channel(channel=interaction.channel)
+            return
+        team_id = team_choice_msg.content
+        
+        valid_team_ids = [option.value for option in team_options]
+        if team_id not in valid_team_ids:
+            await interaction.channel.send("Invalid Tean-ID. Please try again")
+            await self.utils.delete_sub_channel(channel=interaction.channel)
+            return
+        
+        # Get the available members from the database
+        cursor.execute("SELECT * FROM members WHERE team_id = %s", (team_id,))
+        members = cursor.fetchall()
+        member_options = []
+        for member in members:
+            discord_member = await self.utils.get_member(guild=interaction.guild, userId=member[2])
+            nick = discord_member.nick if discord_member.nick is not None else discord_member.name
+            member_options.append(app_commands.Choice(name=nick, value=str(member[0])))
+
+        # Ask for the member
+        member_options_text = ""
+        for option in member_options:
+            member_options_text += "**{}** - {}\n".format(option.value, option.name)
+        await interaction.channel.send(f"Please select a member you want to assign the ticket to:\n{member_options_text}")
+        try:
+            member_choice_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
+        except asyncio.TimeoutError:
+            await interaction.channel.send("Ticket creation timed out.")
+            await self.utils.delete_sub_channel(channel=interaction.channel)
+            return
+        member_id = member_choice_msg.content
+        
+        valid_member_ids = [option.value for option in member_options]
+        if member_id not in valid_member_ids:
+            await interaction.channel.send("Invalid Member-ID. Please try again")
+            await self.utils.delete_sub_channel(channel=interaction.channel)
+            return
+        
+        cursor.execute("UPDATE tickets SET assigned_team_id = %s AND assigned_member_id = %s WHERE id = %s", (team_id, member_id, ticket_id))
+        await interaction.channel.send("New assignment successful")
+
 class Ticket:
     def __init__(self, id, team_member_id, guild_id, created_at=None):
         self.id = id

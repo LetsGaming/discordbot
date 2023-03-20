@@ -167,7 +167,9 @@ CREATE TABLE `tickets` (
   `deadline` date NOT NULL,
   `resolved` tinyint(4) NOT NULL,
   `resolve_date` date DEFAULT NULL,
-  `creation_date` date
+  `creation_date` date,
+  `assigned_team_id` int(11) DEFAULT NULL,
+  `assigned_member_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --

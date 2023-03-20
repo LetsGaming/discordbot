@@ -20,6 +20,7 @@ class TicketSystemHandler:
         self.tree.command(name="get_tickets_week", description="Retrieve your tickets created in past week. Leaders get all team tickets.")(self.ticketCommands.get_tickets_past_week)
         self.tree.command(name="get_tickets_team", description="Gets all tickets of your team, if you're the leader!")(self.ticketCommands.get_tickets_by_team)
         self.tree.command(name="resolve_ticket", description="Lets you resolve one of your tickets")(self.ticketCommands.resolve_ticket)
+        self.tree.command(name="assign_ticket_to", description="Lets you assing a Ticket to a another user")(self.ticketCommands.assign_ticket_to)
         self.tree.command(name="create_project", description="Create a new Project with Teams/Members")(self.ticketProjectCommands.create_project)
         self.tree.command(name="add_team", description="Adds a team to a project")(self.ticketProjectCommands.add_team_to_project)
         self.tree.command(name="add_member", description="Adds a member to a team")(self.ticketProjectCommands.add_member_to_team)
