@@ -61,17 +61,18 @@ class TicketProjectCommands:
             await interaction.followup.send("Project creation timed out.")
             return
         team_amount = team_amount_msg.content
-
-        for x in range(team_amount):
-        # Prompt for team name
-            await interaction.followup.send(f"What would you like to name your {x+1}. team?")
-            try:
-                team_name_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
-            except asyncio.TimeoutError:
-                await interaction.followup.send("Project creation timed out.")
-                return
-            team_name = team_name_msg.content
-            
+        try:
+            for x in range(int(team_amount)):
+            # Prompt for team name
+                await interaction.followup.send(f"What would you like to name your {x+1}. team?")
+                try:
+                    team_name_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
+                except asyncio.TimeoutError:
+                    await interaction.followup.send("Project creation timed out.")
+                    return
+                team_name = team_name_msg.content
+        except:
+            await interaction.followup.send("Please only use full numbers!") 
             # Create the team and prompt for member addition
             team_id = self.create_team(interaction=interaction, name=team_name, description="", project_id=project_id)
             while True:
