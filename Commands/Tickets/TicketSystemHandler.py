@@ -11,7 +11,7 @@ class TicketSystemHandler:
         self.client = client
         
         self.ticketCommands = TicketCommands(client=self.client)
-        self.ticketProjectCommands = TicketProjectCommands()
+        self.ticketProjectCommands = TicketProjectCommands(client=self.client)
         self.ticketStatistics = TicketStatistics() 
 
     async def register_commands(self):
