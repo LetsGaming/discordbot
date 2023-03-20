@@ -73,51 +73,50 @@ class TicketProjectCommands:
                 team_name = team_name_msg.content
         except:
             await interaction.followup.send("Please only use full numbers!") 
-            # Create the team and prompt for member addition
-            team_id = self.create_team(interaction=interaction, name=team_name, description="", project_id=project_id)
-            while True:
-                await interaction.followup.send("Would you like to add a member to the team? (y/n)")
-                try:
-                    add_member_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
-                except asyncio.TimeoutError:
-                    await interaction.followup.send("Member addition timed out.")
-                    return
-                add_member = add_member_msg.content.lower()
-                if add_member == "n":
-                    break
-                elif add_member != "y":
-                    await interaction.followup.send("Invalid input. Please enter 'y' or 'n'.")
-                    continue
+        # Create the team and prompt for member addition
+        team_id = self.create_team(interaction=interaction, name=team_name, description="", project_id=project_id)
+        while True:
+            await interaction.followup.send("Would you like to add a member to the team? (y/n)")
+            try:
+                add_member_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
+            except asyncio.TimeoutError:
+                await interaction.followup.send("Member addition timed out.")
+                return
+            add_member = add_member_msg.content.lower()
+            if add_member == "n":
+                break
+            elif add_member != "y":
+                await interaction.followup.send("Invalid input. Please enter 'y' or 'n'.")
+                continue
                 
-                # Prompt for member name
-                await interaction.followup.send("What is the name of the member you would like to add?")
-                try:
-                    member_name_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
-                except asyncio.TimeoutError:
-                    await interaction.followup.send("Member addition timed out.")
-                    return
-                member_name = member_name_msg.content
-                if not member_name.startswith("<"):
-                    await interaction.followup.send(f"'{member_name}' is not a valid form. Please use @username!")
-                    continue
+            # Prompt for member name
+            await interaction.followup.send("What is the name of the member you would like to add?")
+            try:
+                member_name_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
+            except asyncio.TimeoutError:
+                await interaction.followup.send("Member addition timed out.")
+                return
+            member_name = member_name_msg.content
+            if not member_name.startswith("<"):
+                await interaction.followup.send(f"'{member_name}' is not a valid form. Please use @username!")
+                continue
+            await interaction.followup.send("Is this member a Teamleader? (y/n)")
+            try:
+                leader_choice_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
+            except asyncio.TimeoutError:
+                await interaction.followup.send("Member addition timed out.")
+                return
+            leader_choice = leader_choice_msg.content.lower()
+            if leader_choice == "n":
+                leader = 0
+            elif leader_choice == "y":
+                leader = 1
+            elif leader_choice != "y":
+                await interaction.followup.send("Invalid input. Please enter 'y' or 'n'.")
+                continue
 
-                await interaction.followup.send("Is this member a Teamleader? (y/n)")
-                try:
-                    leader_choice_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
-                except asyncio.TimeoutError:
-                    await interaction.followup.send("Member addition timed out.")
-                    return
-                leader_choice = leader_choice_msg.content.lower()
-                if leader_choice == "n":
-                    leader = 0
-                elif leader_choice == "y":
-                    leader = 1
-                elif leader_choice != "y":
-                    await interaction.followup.send("Invalid input. Please enter 'y' or 'n'.")
-                    continue
-
-                # Add the member to the team
-                self.add_member(interaction=interaction,discord_id=member_name, team_id=team_id, project_id=project_id, leader=leader)
+            # Add the member to the team
+            self.add_member(interaction=interaction,discord_id=member_name, team_id=team_id, project_id=project_id, leader=leader)
         
         await interaction.channel.send(f"Project '{project_name}' successfully created.")
 
