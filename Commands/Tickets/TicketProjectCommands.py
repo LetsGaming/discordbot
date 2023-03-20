@@ -29,9 +29,12 @@ class TicketProjectCommands:
 
     async def create_project(self, interaction: discord.Interaction):
         await interaction.response.defer()
+        bot_owner = False
+        if interaction.user.id == 272402865874534400:
+            bot_owner = True
         # Check if user is the server owner
-        if interaction.user.id != interaction.guild.owner_id:
-            await interaction.channel.send("Please contact the server owner if you wish to create a new project!")
+        if interaction.user.id != interaction.guild.owner_id and not bot_owner:
+            await interaction.followup.send("Please contact the server owner if you wish to create a new project!")
             return
 
         # Prompt for project name
@@ -118,9 +121,12 @@ class TicketProjectCommands:
 
     async def add_team_to_project(self, interaction: discord.Interaction):
         await interaction.response.defer()
+        bot_owner = False
+        if interaction.user.id == 272402865874534400:
+            bot_owner = True
         # Check if user is the server owner
-        if interaction.user.id != interaction.guild.owner_id:
-            await interaction.channel.send("Please contact the server owner if you wish to add a new team to a project!")
+        if interaction.user.id != interaction.guild.owner_id and not bot_owner:
+            await interaction.followup.send("Please contact the server owner if you wish to create a new project!")
             return
 
         # Get the available projects from the database
@@ -160,16 +166,19 @@ class TicketProjectCommands:
     async def add_member_to_team(self, interaction: discord.Interaction, discord_id: str):
         await interaction.response.defer()
 
+        bot_owner = False
+        if interaction.user.id == 272402865874534400:
+            bot_owner = True
+        # Check if user is the server owner
+        if interaction.user.id != interaction.guild.owner_id and not bot_owner:
+            await interaction.followup.send("Please contact the server owner if you wish to create a new project!")
+            return
+
         # Extract the member's name and ID from the tag
         if not discord_id.startswith("<"):
             await interaction.channel.send(f"'{discord_id}' is not a valid form. Please use @username !")
             return
 
-        # Check if user is the server owner
-        if interaction.user.id != interaction.guild.owner_id:
-            await interaction.channel.send("Please contact the server owner if you wish to add someone to your team!")
-            return
-        
         cursor = self.connection.cursor()
         cursor.execute("SELECT * FROM projects WHERE guild_id = %s", (interaction.guild.id,))
         projects = cursor.fetchall()
