@@ -17,8 +17,7 @@ class TicketUtils:
         )
         cursor = self.connection.cursor()
         cursor.execute("SELECT * FROM members")
-        members = cursor.fetchall()
-        self.member_cache = {member[0]: member for member in members}
+        self.member_cache = cursor.fetchall()
         cursor.close()
         self.connection.close()
 
@@ -201,7 +200,7 @@ class TicketUtils:
             for member in self.member_cache:
                 if ticket[4] == member[0]:
                     for_member = await self.get_member(guild=guild, userId=member[2])
-
+            
             ticket_id = ticket[0]
             ticket_author = ticket[5]
             author_icon = ticket[6]
