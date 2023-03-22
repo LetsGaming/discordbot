@@ -190,11 +190,11 @@ class TicketCommands:
             await channel.send("You're not the leader of your team!")
             return
         
-        query = "SELECT * FROM tickets WHERE project_id = %s AND ((team_id = %s OR assigned_team_id = %s) AND resolved = 0"
+        query = "SELECT * FROM tickets WHERE project_id = %s AND ((team_id = %s OR assigned_team_id = %s) AND resolved = 0)"
         if get_resolved:
-            query = "SELECT * FROM tickets WHERE project_id = %s AND ((team_id = %s OR assigned_team_id = %s) AND resolved = 1"
+            query = "SELECT * FROM tickets WHERE project_id = %s AND ((team_id = %s OR assigned_team_id = %s) AND resolved = 1)"
         if get_all:
-            query = "SELECT * FROM tickets WHERE project_id = %s AND ((team_id = %s OR assigned_team_id = %s)"
+            query = "SELECT * FROM tickets WHERE project_id = %s AND ((team_id = %s OR assigned_team_id = %s))"
         cursor.execute(query, (project_id, members_team_id, members_team_id))
         tickets = cursor.fetchall()
 
