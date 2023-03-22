@@ -201,7 +201,8 @@ class TicketUtils:
                 if ticket[4] == member[0]:
                     for_member = await self.get_member(guild=guild, userId=member[2])
                 if ticket[13] == member[0]:
-                    ticket_assigned_to = await self.get_member(guild=guild, userId=member[2])
+                    member = await self.get_member(guild=guild, userId=member[2])
+                    ticket_assigned_to = member.nick
                 else:
                     ticket_assigned_to = "None"
             ticket_id = ticket[0]
@@ -224,6 +225,6 @@ class TicketUtils:
                 "ticket_resolved": ticket_resolved,
                 "ticket_resolved_date": ticket_resolved_date,
                 "ticket_creation_date": ticket_creation_date,
-                "assigned_to_member": ticket_assigned_to.nick
+                "assigned_to_member": ticket_assigned_to
             }
         return tickets_dict
