@@ -11,7 +11,7 @@ class TicketSystemHandler:
         self.tree = tree
         self.client = client
         self.utils = TicketUtils(client)
-        self.ticketCommands = TicketCommands(utils=self.utils)
+        self.ticketCommands = TicketCommands(client=client, utils=self.utils)
         self.ticketProjectCommands = TicketProjectCommands(utils=self.utils)
         self.ticketStatistics = TicketStatistics()
 

@@ -8,7 +8,8 @@ import discord
 import mysql.connector
 
 class TicketCommands:
-    def __init__(self, utils):
+    def __init__(self, client, utils ):
+        self.client = client
         self.config = self.load_config()
         self.connection = mysql.connector.connect(
             host= self.config["host"],
