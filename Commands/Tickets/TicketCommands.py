@@ -7,8 +7,6 @@ from threading import Timer
 import discord
 import mysql.connector
 
-from Commands.Tickets.TicketUtils import TicketUtils
-
 class TicketCommands:
     def __init__(self, utils):
         self.config = self.load_config()
@@ -163,7 +161,7 @@ class TicketCommands:
         tickets = cursor.fetchall()
         
         await channel.send("Getting your tickets...")
-        await self.utils.send_tickets_embeds(channel=channel, interaction_user=interaction_user, tickets_dict=self.utils.create_ticket_dict(tickets=tickets, interaction_user=interaction_user))
+        await self.utils.send_tickets_embeds(channel=channel, interaction_user=interaction_user, tickets_dict = await self.utils.create_ticket_dict(tickets=tickets, guild = guild))
 
     async def get_tickets_by_team(self, interaction: discord.Interaction, get_all: Optional[bool]=False, get_resolved: Optional[bool]=False):
         await interaction.response.defer()
@@ -199,7 +197,7 @@ class TicketCommands:
         tickets = cursor.fetchall()
 
         await channel.send("Getting the tickets...")
-        await self.utils.send_tickets_embeds(channel=channel, interaction_user=interaction_user, tickets_dict=self.utils.create_ticket_dict(tickets=tickets, interaction_user=interaction_user))
+        await self.utils.send_tickets_embeds(channel=channel, interaction_user=interaction_user, tickets_dict= await self.utils.create_ticket_dict(tickets=tickets, guild = guild))
 
     async def get_tickets_past_week(self, interaction: discord.Interaction):
         await interaction.response.defer()
@@ -233,7 +231,7 @@ class TicketCommands:
         tickets = cursor.fetchall()
 
         await channel.send("Getting the tickets...")
-        await self.utils.send_tickets_embeds(channel=channel, interaction_user=interaction_user, tickets_dict=self.utils.create_ticket_dict(tickets=tickets, interaction_user=interaction_user))
+        await self.utils.send_tickets_embeds(channel=channel, interaction_user=interaction_user, tickets_dict= await self.utils.create_ticket_dict(tickets=tickets, guild = guild))
         
     async def resolve_ticket(self, interaction: discord.Interaction, ticket_id: int):
         await interaction.response.defer()

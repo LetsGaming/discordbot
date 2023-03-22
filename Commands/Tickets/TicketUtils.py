@@ -1,12 +1,31 @@
 import asyncio
+import json
 import re
 import discord
 from discord import app_commands
 
+import mysql.connector
 class TicketUtils:
     def __init__(self, client: discord.Client):
         self.client = client
+        self.config = self.load_config()
+        self.connection = mysql.connector.connect(
+            host= self.config["host"],
+            user= self.config["username"],
+            password= self.config["password"],
+            database="pythonbot"
+        )
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT * FROM members")
+        members = cursor.fetchall()
+        self.member_cache = {member[0]: member for member in members}
+        cursor.close()
+        self.connection.close()
 
+    def load_config(self):
+        with open("Configs/sqlconfig.json") as file:
+            return json.load(file)
+        
     async def send_tickets_embeds(self, channel: discord.TextChannel, interaction_user, tickets_dict: dict):
             check = '✅'
             if len(tickets_dict) < 1:
@@ -151,7 +170,7 @@ class TicketUtils:
         members = cursor.fetchall()
         member_options = []
         for member in members:
-            discord_member = await self.utils.get_member(guild=guild, userId=member[2])
+            discord_member = await self.get_member(guild=guild, userId=member[2])
             nick = discord_member.nick if discord_member.nick is not None else discord_member.name
             member_options.append(app_commands.Choice(name=nick, value=str(member[0])))
 
@@ -176,9 +195,13 @@ class TicketUtils:
         else:
             return member_id
         
-    def create_ticket_dict(self, tickets, interaction_user):
+    async def create_ticket_dict(self, tickets, guild):
         tickets_dict = {}
         for index, ticket in enumerate(tickets):
+            for member in self.member_cache:
+                if ticket[4] == member[0]:
+                    for_member = await self.get_member(guild=guild, userId=member[2])
+
             ticket_id = ticket[0]
             ticket_author = ticket[5]
             author_icon = ticket[6]
@@ -191,7 +214,7 @@ class TicketUtils:
             ticket_assigned_to = ticket[13]
             tickets_dict[index] = {
                 "ticket_id": ticket_id,
-                "ticket_for": interaction_user.nick,
+                "ticket_for": for_member.nick,
                 "author_icon": author_icon,
                 "ticket_author": ticket_author,
                 "ticket_title": ticket_title,
