@@ -18,7 +18,11 @@ class TicketUtils:
                     embed.set_author(name=f"From: {ticket['ticket_author']}\nFor: {ticket['ticket_for']}\nAssigned-to: {ticket['assigned_to_member']}")
                     embed.set_thumbnail(url=ticket["author_icon"])
                     embed.add_field(name="ID", value=ticket["ticket_id"])
-                    embed.add_field(name="Creation-Date", value=ticket["ticket_creation_date"].strftime('%d.%m.%Y'))
+                    if ticket["ticket_creation_date"]:
+                        creation_date = ticket["ticket_creation_date"].strftime('%d.%m.%Y')
+                    else:
+                        creation_date = "Null"
+                    embed.add_field(name="Creation-Date", value=creation_date)
                     embed.add_field(name="Deadline", value=ticket["ticket_deadline"].strftime('%d.%m.%Y'))
                     if ticket["ticket_resolved"]:
                         resolved = check
