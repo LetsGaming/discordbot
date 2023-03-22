@@ -264,7 +264,7 @@ class TicketCommands:
         
         member_id = await self.utils.ask_for_member(team_id=team_id, cursor=cursor, guild=interaction.guild, channel=interaction.channel, interaction_user=interaction.user)
         
-        cursor.execute("UPDATE tickets SET assigned_team_id = %s AND assigned_member_id = %s WHERE id = %s", (team_id, member_id, ticket_id))
+        cursor.execute("UPDATE tickets SET assigned_team_id = %s, assigned_member_id = %s WHERE id = %s", (team_id, member_id, ticket_id))
         await interaction.channel.send("New assignment successful")
 
 class Ticket:

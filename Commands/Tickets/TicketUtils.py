@@ -200,7 +200,7 @@ class TicketUtils:
             for member in self.member_cache:
                 if ticket[4] == member[0]:
                     for_member = await self.get_member(guild=guild, userId=member[2])
-                if ticket[13] == member[0]:
+                if ticket[14] == member[0]:
                     member = await self.get_member(guild=guild, userId=member[2])
                     ticket_assigned_to = member.nick
                 else:
