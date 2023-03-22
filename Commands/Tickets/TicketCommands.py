@@ -151,14 +151,14 @@ class TicketCommands:
         member_id = member_tuple[0]
         team_id = member_tuple[1]
         
-        resolved_query_value = 0
-        if get_resolved:
-            resolved_query_value = 1
         if get_all:
-            resolved_query_value = "NULL"
-          
-        query = "SELECT * FROM tickets WHERE project_id = %s AND team_id = %s AND ((member_id = %s OR assigned_member_id = %s) AND resolved = %s)"
-        cursor.execute(query, (project_id, team_id, member_id, member_id, resolved_query_value))
+            resolved_query = "" # empty string means all tickets will be retrieved
+        elif get_resolved:
+            resolved_query = "AND resolved = 1"
+        else:
+            resolved_query = "AND resolved = 0"
+            
+        query = f"SELECT * FROM tickets WHERE project_id = %s AND team_id = %s AND (member_id = %s OR assigned_member_id = %s) {resolved_query}"
         tickets = cursor.fetchall()
         
         await channel.send("Getting your tickets...")
