@@ -159,6 +159,7 @@ class TicketCommands:
             resolved_query = "AND resolved = 0"
             
         query = f"SELECT * FROM tickets WHERE project_id = %s AND team_id = %s AND (member_id = %s OR assigned_member_id = %s) {resolved_query}"
+        cursor.execute(query, (project_id, team_id, member_id, member_id))
         tickets = cursor.fetchall()
         
         await channel.send("Getting your tickets...")
