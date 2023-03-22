@@ -6,9 +6,9 @@ import discord
 from discord import app_commands
 import mysql.connector
 
+
 class TicketProjectCommands:
-    def __init__(self, client: discord.Client):
-        self.client = client
+    def __init__(self, utils):
         self.config = self.load_config()
         self.connection = mysql.connector.connect(
             host= self.config["host"],
@@ -18,6 +18,8 @@ class TicketProjectCommands:
         )
         self.ping_timer = Timer(28500, self.__restart_connection) 
         self.ping_timer.start()
+
+        self.utils = utils
         
     def __restart_connection(self):
         self.connection.connect()
@@ -132,27 +134,7 @@ class TicketProjectCommands:
 
         # Get the available projects from the database
         cursor = self.connection.cursor()
-        cursor.execute("SELECT * FROM projects WHERE guild_id = %s", (interaction.guild.id,))
-        projects = cursor.fetchall()
-        project_options = []
-        for project in projects:
-            project_options.append(app_commands.Choice(name=project[2], value=str(project[0])))
-
-        # Ask for the project
-        project_options_text = ""
-        for option in project_options:
-            project_options_text += "**{}** - {}\n".format(option.value, option.name)
-        await interaction.followup.send(f"Please select a project:\n{project_options_text}")     
-        try:
-            project_choice_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
-        except asyncio.TimeoutError:
-            await interaction.followup.send("Ticket creation timed out.")
-            return
-        project_id = project_choice_msg.content
-        valid_project_ids = [option.value for option in project_options]
-        if project_id not in valid_project_ids:
-            await interaction.followup.send("Invalid Project-ID. Please try again")
-            return
+        project_id = await self.utils.ask_for_project(channel=interaction.channel, interaction_user= interaction.user, guild= interaction.guild, connection=self.connection)
         
         await interaction.followup.send(f"What do you want to name the team?")     
         try:
@@ -181,50 +163,9 @@ class TicketProjectCommands:
             return
 
         cursor = self.connection.cursor()
-        cursor.execute("SELECT * FROM projects WHERE guild_id = %s", (interaction.guild.id,))
-        projects = cursor.fetchall()
-        project_options = []
-        for project in projects:
-            project_options.append(app_commands.Choice(name=project[2], value=str(project[0])))
-
-        # Ask for the project
-        project_options_text = ""
-        for option in project_options:
-            project_options_text += "**{}** - {}\n".format(option.value, option.name)
-        await interaction.followup.send(f"Please select a project:\n{project_options_text}")     
-        try:
-            project_choice_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
-        except asyncio.TimeoutError:
-            await interaction.followup.send("Member addition timed out.")
-            return
-        project_id = project_choice_msg.content
-        valid_project_ids = [option.value for option in project_options]
-        if project_id not in valid_project_ids:
-            await interaction.followup.send("Invalid Project-ID. Please try again")
-            return
+        project_id = await self.utils.ask_for_project(channel=interaction.channel, interaction_user= interaction.user, guild= interaction.guild, connection=self.connection)
         
-        cursor = self.connection.cursor()
-        cursor.execute("SELECT * FROM teams WHERE guild_id = %s and project_id = %s", (interaction.guild.id, project_id,))
-        teams = cursor.fetchall()
-        team_options = []
-        for team in teams:
-            team_options.append(app_commands.Choice(name=team[2], value=str(team[0])))
-        
-        # Ask for the team
-        team_options_text = ""
-        for option in team_options:
-            team_options_text += "**{}** - {}\n".format(option.value, option.name)
-        await interaction.followup.send(f"Please select a team:\n{team_options_text}")     
-        try:
-            team_choice_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
-        except asyncio.TimeoutError:
-            await interaction.followup.send("Member addition timed out.")
-            return
-        team_id = team_choice_msg.content
-        valid_team_ids = [option.value for option in team_options]
-        if project_id not in valid_team_ids:
-            await interaction.followup.send("Invalid Team-ID. Please try again")
-            return
+        team_id = await self.utils.ask_for_team(project_id=project_id, channel=interaction.channel,interaction_user=interaction.user, cursor=cursor)
 
         leader_options = []
         for i in range(2):

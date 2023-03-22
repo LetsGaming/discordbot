@@ -6,13 +6,11 @@ from threading import Timer
 
 import discord
 import mysql.connector
-from discord import app_commands
 
 from Commands.Tickets.TicketUtils import TicketUtils
 
 class TicketCommands:
-    def __init__(self, client: discord.Client):
-        self.client = client
+    def __init__(self, utils):
         self.config = self.load_config()
         self.connection = mysql.connector.connect(
             host= self.config["host"],
@@ -23,7 +21,7 @@ class TicketCommands:
         self.ping_timer = Timer(28500, self.__restart_connection) 
         self.ping_timer.start() 
 
-        self.utils = TicketUtils(client)
+        self.utils = utils
 
     def __restart_connection(self):
         self.connection.connect()
@@ -46,84 +44,11 @@ class TicketCommands:
         
         # Get the available projects from the database
         cursor = self.connection.cursor()
-        cursor.execute("SELECT * FROM projects WHERE guild_id = %s", (guild.id,))
-        projects = cursor.fetchall()
-        project_options = []
-        for project in projects:
-            project_options.append(app_commands.Choice(name=project[2], value=str(project[0])))
+        project_id = await self.utils.ask_for_project(channel=channel, interaction_user= interaction_user, guild=guild, cursor=cursor)
 
-        # Ask for the project
-        project_options_text = ""
-        for option in project_options:
-            project_options_text += "**{}** - {}\n".format(option.value, option.name)
-        await channel.send(f"Please select a project:\n{project_options_text}") 
-        try:
-            project_choice_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction_user, timeout=60)
-        except asyncio.TimeoutError:
-            await channel.send("Ticket creation timed out.")
-            await self.utils.delete_sub_channel(channel=channel)
-            return
-        project_id = project_choice_msg.content
+        team_id = await self.utils.ask_for_team(project_id=project_id, channel=channel,interaction_user=interaction_user, cursor=cursor)
         
-        valid_project_ids = [option.value for option in project_options]
-        if project_id not in valid_project_ids:
-            await channel.send("Invalid Project-ID. Please try again")
-            await self.utils.delete_sub_channel(channel=channel)
-            return
-
-        # Get the available teams from the database
-        cursor.execute("SELECT * FROM teams WHERE project_id = %s", (project_id,))
-        teams = cursor.fetchall()
-        team_options = []
-        for team in teams:
-            team_options.append(app_commands.Choice(name=team[2], value=str(team[0])))
-
-        # Ask for the team
-        team_options_text = ""
-        for option in  team_options:
-            team_options_text += "**{}** - {}\n".format(option.value, option.name)
-        await channel.send(f"Please select a team:\n{team_options_text}")
-        try:
-            team_choice_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction_user, timeout=60)
-        except asyncio.TimeoutError:
-            await channel.send("Ticket creation timed out.")
-            await self.utils.delete_sub_channel(channel=channel)
-            return
-        team_id = team_choice_msg.content
-        
-        valid_team_ids = [option.value for option in team_options]
-        if team_id not in valid_team_ids:
-            await channel.send("Invalid Tean-ID. Please try again")
-            await self.utils.delete_sub_channel(channel=channel)
-            return
-        
-        # Get the available members from the database
-        cursor.execute("SELECT * FROM members WHERE team_id = %s", (team_id,))
-        members = cursor.fetchall()
-        member_options = []
-        for member in members:
-            discord_member = await self.utils.get_member(guild=guild, userId=member[2])
-            nick = discord_member.nick if discord_member.nick is not None else discord_member.name
-            member_options.append(app_commands.Choice(name=nick, value=str(member[0])))
-
-        # Ask for the member
-        member_options_text = ""
-        for option in member_options:
-            member_options_text += "**{}** - {}\n".format(option.value, option.name)
-        await channel.send(f"Please select a a member:\n{member_options_text}")
-        try:
-            member_choice_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction_user, timeout=60)
-        except asyncio.TimeoutError:
-            await channel.send("Ticket creation timed out.")
-            await self.utils.delete_sub_channel(channel=channel)
-            return
-        member_id = member_choice_msg.content
-        
-        valid_member_ids = [option.value for option in member_options]
-        if member_id not in valid_member_ids:
-            await channel.send("Invalid Member-ID. Please try again")
-            await self.utils.delete_sub_channel(channel=channel)
-            return
+        member_id = await self.utils.ask_for_member(team_id=team_id, cursor=cursor, guild=guild, channel=channel, interaction_user=interaction_user)
         
         await channel.send("What would you like the title of the ticket to be?")
         try:
@@ -156,10 +81,35 @@ class TicketCommands:
         
         # Create the ticket in the database
         ticket_author = interaction_user
-        today = datetime.date.today()
-        today_date = today.strftime('%Y-%m-%d')
-        cursor.execute("INSERT INTO tickets (id, guild_id, project_id, team_id, member_id, ticket_author, ticket_author_icon, ticket_title, ticket_description, deadline, resolved, resolve_date, creation_date) VALUES (null,%s, %s, %s, %s, %s, %s, %s, %s, %s, 0, null, %s)",
-                         (guild.id, project_id, team_id, member_id, ticket_author.nick, ticket_author.avatar.url, ticket_title, ticket_description, ticket_deadline_date, today_date))
+        today_date = date.today().isoformat()
+        query = """
+            INSERT INTO tickets (
+                guild_id, project_id, team_id, member_id, ticket_author,
+                ticket_author_icon, ticket_title, ticket_description, deadline,
+                resolved, creation_date, assigned_team_id,
+                assigned_member_id
+            )
+            VALUES (
+                %(guild_id)s, %(project_id)s, %(team_id)s, %(member_id)s,
+                %(ticket_author)s, %(ticket_author_icon)s, %(ticket_title)s,
+                %(ticket_description)s, %(deadline)s, 0, %(creation_date)s,
+            )
+        """
+
+        params = {
+            "guild_id": guild.id,
+            "project_id": project_id,
+            "team_id": team_id,
+            "member_id": member_id,
+            "ticket_author": ticket_author.nick,
+            "ticket_author_icon": ticket_author.avatar.url,
+            "ticket_title": ticket_title,
+            "ticket_description": ticket_description,
+            "deadline": ticket_deadline_date,
+            "creation_date": today_date,
+        }
+
+        cursor.execute(query, params)
         self.connection.commit()
         ticket_id = cursor.lastrowid
         await channel.send("Ticket created successfully!")
@@ -193,67 +143,27 @@ class TicketCommands:
         guild = interaction.guild
         interaction_user = interaction.user
         
-        cursor = self.connection.cursor()
-        cursor.execute("SELECT * FROM projects WHERE guild_id = %s", (guild.id,))
-        projects = cursor.fetchall()
-        project_options = []
-        for project in projects:
-            project_options.append(app_commands.Choice(name=project[2], value=str(project[0])))
-
-        # Ask for the project
-        project_options_text = ""
-        for option in project_options:
-            project_options_text += "**{}** - {}\n".format(option.value, option.name)
-        await channel.send(f"For what project do you want to get your tickets?:\n{project_options_text}")
-        try:
-            project_choice_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction_user, timeout=60)
-        except asyncio.TimeoutError:
-            await channel.send("Ticket getting timed out.")
-            await self.utils.delete_sub_channel(channel=channel)
-            return
-        project_id = project_choice_msg.content
-        valid_project_ids = [option.value for option in project_options]
-        if project_id not in valid_project_ids:
-            await channel.send("Invalid Project-ID. Please try again")
-            await self.utils.delete_sub_channel(channel=channel)
-            return
+        project_id = await self.utils.ask_for_project(channel=channel, interaction_user= interaction_user, guild=guild, cursor=cursor)
         
+        cursor = self.connection.cursor()
         discord_id = f"<@{interaction_user.id}>"
         cursor.execute("SELECT id, team_id FROM members WHERE discord_id = %s AND project_id = %s", (discord_id, project_id))
         member_tuple = cursor.fetchone()
         member_id = member_tuple[0]
         team_id = member_tuple[1]
-
-        query = "SELECT * FROM tickets WHERE project_id = %s AND team_id = %s AND member_id = %s AND resolved = 0"
+        
+        resolved_query_value = 0
         if get_resolved:
-            query = "SELECT * FROM tickets WHERE project_id = %s AND team_id = %s AND member_id = %s AND resolved = 1"
+            resolved_query_value = 1
         if get_all:
-            query = "SELECT * FROM tickets WHERE project_id = %s AND team_id = %s AND member_id = %s"
-        cursor.execute(query, (project_id, team_id, member_id))
+            resolved_query_value = "NULL"
+          
+        query = "SELECT * FROM tickets WHERE project_id = %s AND team_id = %s AND ((member_id = %s OR assigned_member_id = %s) AND resolved = %s)"
+        cursor.execute(query, (project_id, team_id, member_id, member_id, resolved_query_value))
         tickets = cursor.fetchall()
-        tickets_dict = {}
-        for index, ticket in enumerate(tickets):
-            ticket_id = ticket[0]
-            ticket_author = ticket[5]
-            author_icon = ticket[6]
-            ticket_title = ticket[7]
-            ticket_description = ticket[8]
-            ticket_deadline = ticket[9]
-            ticket_resolved = ticket[10]
-            ticket_resolved_date = ticket[11]
-            tickets_dict[index] = {
-                "ticket_id": ticket_id,
-                "ticket_for": interaction_user.nick,
-                "author_icon": author_icon,
-                "ticket_author": ticket_author,
-                "ticket_title": ticket_title,
-                "ticket_description": ticket_description,
-                "ticket_deadline": ticket_deadline,
-                "ticket_resolved": ticket_resolved,
-                "ticket_resolved_date": ticket_resolved_date
-            }
+        
         await channel.send("Getting your tickets...")
-        await self.utils.send_tickets_embeds(channel=channel, interaction_user=interaction_user, tickets_dict=tickets_dict)
+        await self.utils.send_tickets_embeds(channel=channel, interaction_user=interaction_user, tickets_dict=self.utils.create_ticket_dict(tickets=tickets, interaction_user=interaction_user))
 
     async def get_tickets_by_team(self, interaction: discord.Interaction, get_all: Optional[bool]=False, get_resolved: Optional[bool]=False):
         await interaction.response.defer()
@@ -267,29 +177,7 @@ class TicketCommands:
         interaction_user = interaction.user
         
         cursor = self.connection.cursor()
-        cursor.execute("SELECT * FROM projects WHERE guild_id = %s", (guild.id,))
-        projects = cursor.fetchall()
-        project_options = []
-        for project in projects:
-            project_options.append(app_commands.Choice(name=project[2], value=str(project[0])))
-
-        # Ask for the project
-        project_options_text = ""
-        for option in project_options:
-            project_options_text += "**{}** - {}\n".format(option.value, option.name)
-        await channel.send(f"For what project do you want to get the tickets?:\n{project_options_text}")
-        try:
-            project_choice_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction_user, timeout=60)
-        except asyncio.TimeoutError:
-            await channel.send("Ticket getting timed out.")
-            await self.utils.delete_sub_channel(channel=channel)
-            return
-        project_id = project_choice_msg.content
-        valid_project_ids = [option.value for option in project_options]
-        if project_id not in valid_project_ids:
-            await channel.send("Invalid Project-ID. Please try again")
-            await self.utils.delete_sub_channel(channel=channel)
-            return
+        project_id = await self.utils.ask_for_project(channel=channel, interaction_user= interaction_user, guild=guild, cursor=cursor)
         
         #Check if user is leader
         discord_id = f"<@{interaction.user.id}>"
@@ -302,39 +190,16 @@ class TicketCommands:
             await channel.send("You're not the leader of your team!")
             return
         
-        query = "SELECT * FROM tickets WHERE project_id = %s AND team_id = %s AND resolved = 0"
+        query = "SELECT * FROM tickets WHERE project_id = %s AND ((team_id = %s OR assigned_team_id = %s) AND resolved = 0"
         if get_resolved:
-            query = "SELECT * FROM tickets WHERE project_id = %s AND team_id = %s AND resolved = 1"
+            query = "SELECT * FROM tickets WHERE project_id = %s AND ((team_id = %s OR assigned_team_id = %s) AND resolved = 1"
         if get_all:
-            query = "SELECT * FROM tickets WHERE project_id = %s AND team_id = %s"
-        cursor.execute(query, (project_id, members_team_id))
+            query = "SELECT * FROM tickets WHERE project_id = %s AND ((team_id = %s OR assigned_team_id = %s)"
+        cursor.execute(query, (project_id, members_team_id, members_team_id))
         tickets = cursor.fetchall()
-        tickets_dict = {}
-        for index, ticket in enumerate(tickets):
-            cursor.execute("SELECT discord_id from members where id = %s", (ticket[4],))
-            ticket_discord_id = cursor.fetchone()[0]
-            ticket_for_user = await self.utils.get_member(guild=guild,userId=ticket_discord_id)
-            ticket_id = ticket[0]
-            ticket_author = ticket[5]
-            author_icon = ticket[6]
-            ticket_title = ticket[7]
-            ticket_description = ticket[8]
-            ticket_deadline = ticket[9]
-            ticket_resolved = ticket[10]
-            ticket_resolved_date = ticket[11]
-            tickets_dict[index] = {
-                "ticket_id": ticket_id,
-                "ticket_for": ticket_for_user.nick,
-                "author_icon": author_icon,
-                "ticket_author": ticket_author,
-                "ticket_title": ticket_title,
-                "ticket_description": ticket_description,
-                "ticket_deadline": ticket_deadline,
-                "ticket_resolved": ticket_resolved,
-                "ticket_resolved_date": ticket_resolved_date
-            }
+
         await channel.send("Getting the tickets...")
-        await self.utils.send_tickets_embeds(channel=channel, interaction_user=interaction_user, tickets_dict=tickets_dict)
+        await self.utils.send_tickets_embeds(channel=channel, interaction_user=interaction_user, tickets_dict=self.utils.create_ticket_dict(tickets=tickets, interaction_user=interaction_user))
 
     async def get_tickets_past_week(self, interaction: discord.Interaction):
         await interaction.response.defer()
@@ -348,29 +213,7 @@ class TicketCommands:
         interaction_user = interaction.user
         
         cursor = self.connection.cursor()
-        cursor.execute("SELECT id, name FROM projects WHERE guild_id = %s", (guild.id,))
-        projects = cursor.fetchall()
-        project_options = []
-        for project in projects:
-            project_options.append(app_commands.Choice(name=project[1], value=str(project[0])))
-
-        # Ask for the project
-        project_options_text = ""
-        for option in project_options:
-            project_options_text += "**{}** - {}\n".format(option.value, option.name)
-        await channel.send(f"For what project do you want to get the tickets?:\n{project_options_text}")
-        try:
-            project_choice_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction_user, timeout=60)
-        except asyncio.TimeoutError:
-            await channel.send("Ticket getting timed out.")
-            await self.utils.delete_sub_channel(channel=channel)
-            return
-        project_id = project_choice_msg.content
-        valid_project_ids = [option.value for option in project_options]
-        if project_id not in valid_project_ids:
-            await channel.send("Invalid Project-ID. Please try again")
-            await self.utils.delete_sub_channel(channel=channel)
-            return
+        project_id = await self.utils.ask_for_project(channel=channel, interaction_user= interaction_user, guild=guild, cursor=cursor)
         
         #Check if user is leader
         discord_id = f"<@{interaction.user.id}>"
@@ -380,40 +223,17 @@ class TicketCommands:
         member_id = result[1]
         leader = result[2]
         
-        query = "SELECT * FROM tickets WHERE project_id = %s AND team_id = %s AND member_id = %s and creation_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 WEEK) AND NOW()"
-        values = (project_id, members_team_id, member_id)
+        query = "SELECT * FROM tickets WHERE project_id = %s AND team_id = %s AND ((member_id = %s OR assigned_member_id = %s) and creation_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 WEEK) AND NOW()"
+        values = (project_id, members_team_id, member_id, member_id)
         if leader:
-            query = "SELECT * FROM tickets WHERE project_id = %s AND team_id = %s and creation_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 WEEK) AND NOW()"
-            values = (project_id, members_team_id)
+            query = "SELECT * FROM tickets WHERE project_id = %s AND ((team_id = %s OR assigned_team_id = %s) and creation_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 WEEK) AND NOW()"
+            values = (project_id, members_team_id, members_team_id)
 
         cursor.execute(query, values)
         tickets = cursor.fetchall()
-        tickets_dict = {}
-        for index, ticket in enumerate(tickets):
-            cursor.execute("SELECT discord_id from members where id = %s", (ticket[4],))
-            ticket_discord_id = cursor.fetchone()[0]
-            ticket_for_user = await self.utils.get_member(guild=guild,userId=ticket_discord_id)
-            ticket_id = ticket[0]
-            ticket_author = ticket[5]
-            author_icon = ticket[6]
-            ticket_title = ticket[7]
-            ticket_description = ticket[8]
-            ticket_deadline = ticket[9]
-            ticket_resolved = ticket[10]
-            ticket_resolved_date = ticket[11]
-            tickets_dict[index] = {
-                "ticket_id": ticket_id,
-                "ticket_for": ticket_for_user.nick,
-                "author_icon": author_icon,
-                "ticket_author": ticket_author,
-                "ticket_title": ticket_title,
-                "ticket_description": ticket_description,
-                "ticket_deadline": ticket_deadline,
-                "ticket_resolved": ticket_resolved,
-                "ticket_resolved_date": ticket_resolved_date
-            }
+
         await channel.send("Getting the tickets...")
-        await self.utils.send_tickets_embeds(channel=channel, interaction_user=interaction_user, tickets_dict=tickets_dict)
+        await self.utils.send_tickets_embeds(channel=channel, interaction_user=interaction_user, tickets_dict=self.utils.create_ticket_dict(tickets=tickets, interaction_user=interaction_user))
         
     async def resolve_ticket(self, interaction: discord.Interaction, ticket_id: int):
         await interaction.response.defer()
@@ -442,59 +262,9 @@ class TicketCommands:
         cursor.execute("SELECT project_id FROM tickets WHERE id = %s", (ticket_id,))
         project_id = cursor.fetchone()[0]
 
-        # Get the available teams from the database
-        cursor.execute("SELECT * FROM teams WHERE project_id = %s", (project_id,))
-        teams = cursor.fetchall()
-        team_options = []
-        for team in teams:
-            team_options.append(app_commands.Choice(name=team[2], value=str(team[0])))
-
-        # Ask for the team
-        team_options_text = ""
-        for option in  team_options:
-            team_options_text += "**{}** - {}\n".format(option.value, option.name)
-        await interaction.channel.send(f"Please select a team:\n{team_options_text}")
-        try:
-            team_choice_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
-        except asyncio.TimeoutError:
-            await interaction.channel.send("Ticket creation timed out.")
-            await self.utils.delete_sub_channel(channel=interaction.channel)
-            return
-        team_id = team_choice_msg.content
+        team_id = await self.utils.ask_for_team(project_id=project_id, cursor=cursor, channel=interaction.channel, interaction_user=interaction.user)
         
-        valid_team_ids = [option.value for option in team_options]
-        if team_id not in valid_team_ids:
-            await interaction.channel.send("Invalid Tean-ID. Please try again")
-            await self.utils.delete_sub_channel(channel=interaction.channel)
-            return
-        
-        # Get the available members from the database
-        cursor.execute("SELECT * FROM members WHERE team_id = %s", (team_id,))
-        members = cursor.fetchall()
-        member_options = []
-        for member in members:
-            discord_member = await self.utils.get_member(guild=interaction.guild, userId=member[2])
-            nick = discord_member.nick if discord_member.nick is not None else discord_member.name
-            member_options.append(app_commands.Choice(name=nick, value=str(member[0])))
-
-        # Ask for the member
-        member_options_text = ""
-        for option in member_options:
-            member_options_text += "**{}** - {}\n".format(option.value, option.name)
-        await interaction.channel.send(f"Please select a member you want to assign the ticket to:\n{member_options_text}")
-        try:
-            member_choice_msg = await self.client.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60)
-        except asyncio.TimeoutError:
-            await interaction.channel.send("Ticket creation timed out.")
-            await self.utils.delete_sub_channel(channel=interaction.channel)
-            return
-        member_id = member_choice_msg.content
-        
-        valid_member_ids = [option.value for option in member_options]
-        if member_id not in valid_member_ids:
-            await interaction.channel.send("Invalid Member-ID. Please try again")
-            await self.utils.delete_sub_channel(channel=interaction.channel)
-            return
+        member_id = await self.utils.ask_for_member(team_id=team_id, cursor=cursor, guild=interaction.guild, channel=interaction.channel, interaction_user=interaction.user)
         
         cursor.execute("UPDATE tickets SET assigned_team_id = %s AND assigned_member_id = %s WHERE id = %s", (team_id, member_id, ticket_id))
         await interaction.channel.send("New assignment successful")

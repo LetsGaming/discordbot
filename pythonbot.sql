@@ -115,7 +115,7 @@ CREATE TABLE `quote` (
 --
 
 INSERT INTO `quote` (`quote_id`, `guild_id`, `quote_date`, `username`, `user_avatar`, `quote_text`) VALUES
-(2, 1043909951191535656, '2023-01-31', '『米蘭』', 'https://cdn.discordapp.com/avatars/332527004606005248/abe0059e5826e7a4fb0380bef04354dc.png?size=1024', 'i don\'t have a job i already work as a discord mod'),
+(2, 1043909951191535656, '2023-01-31', '『米蘭』', 'https://cdn.discordapp.com/avatars/332527004606005248/abe0059e5826e7a4fb0380bef04354dc.png?size=1024', 'i dont need a job i already work as a discord mod'),
 (3, 1043909951191535656, '2023-02-01', 'LetsGamingDE', 'https://cdn.discordapp.com/avatars/272402865874534400/4de66dd5df030ce9f31008675a6ee6c0.png?size=1024', 'Kämpft gegen Malphite: Warum macht dieser Stein denn so viel Damage? So hab ich Kleinstein nicht in Erinnerung ;-;'),
 (4, 1043909951191535656, '2023-02-01', '『米蘭』', 'https://cdn.discordapp.com/avatars/332527004606005248/abe0059e5826e7a4fb0380bef04354dc.png?size=1024', 'Ich wie ich in Mathe einfach nichts verstehe: https://cdn.discordapp.com/attachments/1026274535936376923/1070334973619486851/image.png'),
 (5, 1043909951191535656, '2023-02-01', 'LetsGamingDE', 'https://cdn.discordapp.com/avatars/272402865874534400/4de66dd5df030ce9f31008675a6ee6c0.png?size=1024', 'Domenic : Das ist ein Semilocon. / Mill : ...Meinst du Semicolon? / Domenic : Ja Semilocolon.'),
