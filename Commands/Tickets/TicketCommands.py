@@ -140,10 +140,10 @@ class TicketCommands:
         
         guild = interaction.guild
         interaction_user = interaction.user
-        
+
+        cursor = self.connection.cursor()
         project_id = await self.utils.ask_for_project(channel=channel, interaction_user= interaction_user, guild=guild, cursor=cursor)
         
-        cursor = self.connection.cursor()
         discord_id = f"<@{interaction_user.id}>"
         cursor.execute("SELECT id, team_id FROM members WHERE discord_id = %s AND project_id = %s", (discord_id, project_id))
         member_tuple = cursor.fetchone()
@@ -255,7 +255,7 @@ class TicketCommands:
         
     async def assign_ticket_to(self, interaction: discord.Interaction, ticket_id: int):
         await interaction.response.defer()
-        await interaction.channel.send("Assigning ticket to another user...")
+        await interaction.followup.send("Assigning ticket to another user...")
         cursor = self.connection.cursor()
         cursor.execute("SELECT project_id FROM tickets WHERE id = %s", (ticket_id,))
         project_id = cursor.fetchone()[0]
