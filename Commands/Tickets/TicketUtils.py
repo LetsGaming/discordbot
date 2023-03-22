@@ -200,7 +200,8 @@ class TicketUtils:
             for member in self.member_cache:
                 if ticket[4] == member[0]:
                     for_member = await self.get_member(guild=guild, userId=member[2])
-            
+                if ticket[13] == member[0]:
+                    ticket_assigned_to = await self.get_member(guild=guild, userId=member[2])
             ticket_id = ticket[0]
             ticket_author = ticket[5]
             author_icon = ticket[6]
@@ -210,7 +211,6 @@ class TicketUtils:
             ticket_resolved = ticket[10]
             ticket_resolved_date = ticket[11]
             ticket_creation_date = ticket[12]
-            ticket_assigned_to = ticket[13]
             tickets_dict[index] = {
                 "ticket_id": ticket_id,
                 "ticket_for": for_member.nick,
