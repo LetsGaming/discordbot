@@ -195,36 +195,25 @@ class TicketUtils:
             return member_id
         
     async def create_ticket_dict(self, tickets, guild):
+        member_cache = {member[0]: await self.get_member(guild=guild, userId=member[2]) for member in self.member_cache if member[2]}
         tickets_dict = {}
         for index, ticket in enumerate(tickets):
-            for member in self.member_cache:
-                if ticket[4] == member[0]:
-                    for_member = await self.get_member(guild=guild, userId=member[2])
-                if ticket[14] == member[0]:
-                    member = await self.get_member(guild=guild, userId=member[2])
-                    ticket_assigned_to = member.nick
-                else:
-                    ticket_assigned_to = "None"
-            ticket_id = ticket[0]
-            ticket_author = ticket[5]
-            author_icon = ticket[6]
-            ticket_title = ticket[7]
-            ticket_description = ticket[8]
-            ticket_deadline = ticket[9]
-            ticket_resolved = ticket[10]
-            ticket_resolved_date = ticket[11]
-            ticket_creation_date = ticket[12]
+            for_member = member_cache.get(ticket[4], {})
+            if ticket[14] in member_cache:
+                assigned_member = member_cache[ticket[14]]
+                ticket_assigned_to = assigned_member.nick
+            else:
+                ticket_assigned_to = "None"
             tickets_dict[index] = {
-                "ticket_id": ticket_id,
+                "ticket_id": ticket[0],
                 "ticket_for": for_member.nick,
-                "author_icon": author_icon,
-                "ticket_author": ticket_author,
-                "ticket_title": ticket_title,
-                "ticket_description": ticket_description,
-                "ticket_deadline": ticket_deadline,
-                "ticket_resolved": ticket_resolved,
-                "ticket_resolved_date": ticket_resolved_date,
-                "ticket_creation_date": ticket_creation_date,
+                "ticket_author": ticket[5],
+                "ticket_title": ticket[7],
+                "ticket_description": ticket[8],
+                "ticket_deadline": ticket[9],
+                "ticket_resolved": ticket[10],
+                "ticket_resolved_date": ticket[11],
+                "ticket_creation_date": ticket[12],
                 "assigned_to_member": ticket_assigned_to
             }
         return tickets_dict
