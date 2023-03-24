@@ -208,6 +208,7 @@ class TicketUtils:
                 "ticket_id": ticket[0],
                 "ticket_for": for_member.nick,
                 "ticket_author": ticket[5],
+                "author_icon": ticket[6],
                 "ticket_title": ticket[7],
                 "ticket_description": ticket[8],
                 "ticket_deadline": ticket[9],
