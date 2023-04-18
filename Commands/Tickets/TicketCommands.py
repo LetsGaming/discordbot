@@ -91,7 +91,7 @@ class TicketCommands:
             VALUES (
                 %(guild_id)s, %(project_id)s, %(team_id)s, %(member_id)s,
                 %(ticket_author)s, %(ticket_author_icon)s, %(ticket_title)s,
-                %(ticket_description)s, %(deadline)s, 0, %(creation_date)s,
+                %(ticket_description)s, %(deadline)s, 0, %(creation_date)s, null, null,
             )
         """
 
